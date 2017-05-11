@@ -1,0 +1,6 @@
+# Created by .ignore support plugin (hsz.mobi)
+.idea
+DataHouse/__pycache__/
+DataHouse/crawler/__pycache__/
+DataHouse/ml/loginfo.log
+DataHouse/spiders/__pycache__/
