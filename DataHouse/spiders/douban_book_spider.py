@@ -65,8 +65,8 @@ class DoubanBookSpider(scrapy.Spider):
                 -2].strip()
             publisher = each_book.xpath('div[@class="info"]/div[@class="pub"]/text()').extract_first().split('/')[
                 -3].strip()
-            score = each_book.xpath(
-                'div[@class="info"]/div[@class="star clearfix"]/span[@class="rating_nums"]/text()').extract_first()
+            score = float(each_book.xpath(
+                'div[@class="info"]/div[@class="star clearfix"]/span[@class="rating_nums"]/text()').extract_first().strip())
             scorerNum = each_book.xpath(
                 'div[@class="info"]/div[@class="star clearfix"]/span[@class="pl"]/text()').extract_first().replace('(',
                                                                                                                    '').replace(

@@ -1,12 +1,9 @@
+import datetime
 import os
 import urllib.parse
-import datetime
 
 import pandas as pd
 import scrapy
-from scrapy.selector import Selector
-from scrapy.http import HtmlResponse
-
 from pymongo import MongoClient
 
 from DataHouse.items import DoubanMovie
@@ -62,16 +59,20 @@ class DoubanMovieSpider(scrapy.Spider):
                 yield scrapy.Request(url=url, callback=self.parse, headers=self.headers)
 
     def parse(self, response):
+        import re
+        def parse_date(data_string):
+            match_result = re.match('\d{4}-*\d{0,2}-\d{0,2}', data_string)
+            return match_result.group() if match_result is not None else 0
+
         for each_movie in response.xpath('//div[@class="article"]/div[2]/table'):
             url = each_movie.xpath('tr/td[1]/a/@href').extract_first()
             title = each_movie.xpath('tr/td[1]/a/@title').extract_first()
             image = each_movie.xpath('tr/td[1]/a/img/@src').extract_first()
             category = urllib.parse.unquote(response.url.split('?')[0].split('/')[-1])
-            date = \
-                each_movie.xpath('tr/td[2]/div[@class="pl2"]/p[@class="pl"]/text()').extract_first().strip().split('/')[
-                    0].split('(')[0]
-            score = each_movie.xpath(
-                'tr/td[2]/div[@class="pl2"]/div[@class="star clearfix"]/span[@class="rating_nums"]/text()').extract_first()
+            date = parse_date(
+                each_movie.xpath('tr/td[2]/div[@class="pl2"]/p[@class="pl"]/text()').extract_first().strip())
+            score = float(each_movie.xpath(
+                'tr/td[2]/div[@class="pl2"]/div[@class="star clearfix"]/span[@class="rating_nums"]/text()').extract_first().strip())
             scorerNum = each_movie.xpath(
                 'tr/td[2]/div[@class="pl2"]/div[@class="star clearfix"]/span[@class="pl"]/text()').extract_first().replace(
                 '人评价)', '').replace('(', '')
