@@ -6,8 +6,33 @@ def parse_date(data_string):
     return match_result.group() if match_result is not None else 0
 
 
+def parse_scorerNum(scorer_string):
+    match_result = re.match('\d+', scorer_string.replace('(', '').replace(')', ''))
+    return match_result.group() if match_result is not None else 0
+
+
+def get_max_pagenum(tag):
+    import requests
+    from bs4 import BeautifulSoup
+    headers = {
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Encoding': 'gzip, deflate, sdch, br',
+        'Accept-Language': 'zh-CN,zh;q=0.8,en;q=0.6',
+        'Host': 'movie.douban.com',
+        'Referer': 'https://movie.douban.com/tag/',
+        'Upgrade-Insecure-Requests': '1',
+        'User-Agent': 'Mozilla/5.0 (iPad; CPU OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+    }
+    response = requests.get('https://movie.douban.com/tag/%s' % tag, headers=headers)
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, 'html5lib')
+        page_div = soup.find_all('div', class_='paginator')[0]
+        a_list = page_div.find_all('a')
+        max_pagenum = int(a_list[-2].get_text().strip())
+
+        return max_pagenum
+
+
 if __name__ == '__main__':
-    result = parse_date('(北京电影节) / (中国大陆) / 金城武 / 周冬雨 / 孙艺洲 / 奚梦瑶 '
-                        '/ 杨祐宁 / 张国柱 / 高晓松 / 林志玲 / 中国大陆 / 许宏宇 / 106分钟 / 喜剧 / 爱情 / '
-                        '李媛 Yuan Li / 许伊萌 Yimeng Xu / 蓝白色(原著) / 汉语普通话')
-    print(result)
+    get_max_pagenum('爱情')

@@ -32,6 +32,7 @@ class DoubanMovieSpider(scrapy.Spider):
             my_dict = {}
             import requests
             from bs4 import BeautifulSoup
+            import time
             headers = {
                 'Host': 'movie.douban.com',
                 'Referer': 'https://movie.douban.com/',
@@ -43,14 +44,15 @@ class DoubanMovieSpider(scrapy.Spider):
             if response.status_code == 200:
                 soup = BeautifulSoup(response.text, 'html5lib')
                 for td in soup.find_all('div', class_='article')[0].find_all('td'):
-                    my_dict[td.a.get_text().strip()] = int(td.b.get_text().replace('(', '').replace(')', ''))
+                    my_dict[td.a.get_text().strip()] = get_max_pagenum(td.a.get_text().strip()) * 20
+                    time.sleep(3)
             else:
                 raise ValueError('Fail to get tags...' + str(response.status_code))
 
             return my_dict
 
-        # tags_and_num = get_tags_and_num()
-        tags_and_num = {'科幻': 6181851}
+        tags_and_num = get_tags_and_num()
+        # tags_and_num = {'科幻': 6181851}
         print(tags_and_num)
         for tag, num in tags_and_num.items():
             urls = ['https://movie.douban.com/tag/' + urllib.parse.quote(tag) + '?start=%d&type=T' % i for i in
@@ -64,6 +66,10 @@ class DoubanMovieSpider(scrapy.Spider):
             match_result = re.match('\d{4}-*\d{0,2}-\d{0,2}', data_string)
             return match_result.group() if match_result is not None else 0
 
+        def parse_scorerNum(scorer_string):
+            match_result = re.match('\d+', scorer_string.replace('(', '').replace(')', ''))
+            return match_result.group() if match_result is not None else 0
+
         for each_movie in response.xpath('//div[@class="article"]/div[2]/table'):
             url = each_movie.xpath('tr/td[1]/a/@href').extract_first()
             title = each_movie.xpath('tr/td[1]/a/@title').extract_first()
@@ -73,9 +79,8 @@ class DoubanMovieSpider(scrapy.Spider):
                 each_movie.xpath('tr/td[2]/div[@class="pl2"]/p[@class="pl"]/text()').extract_first().strip())
             score = float(each_movie.xpath(
                 'tr/td[2]/div[@class="pl2"]/div[@class="star clearfix"]/span[@class="rating_nums"]/text()').extract_first().strip())
-            scorerNum = each_movie.xpath(
-                'tr/td[2]/div[@class="pl2"]/div[@class="star clearfix"]/span[@class="pl"]/text()').extract_first().replace(
-                '人评价)', '').replace('(', '')
+            scorerNum = int(parse_scorerNum(each_movie.xpath(
+                'tr/td[2]/div[@class="pl2"]/div[@class="star clearfix"]/span[@class="pl"]/text()').extract_first().strip()))
 
             douban_movie = DoubanMovie(title=title, url=url, image=image, category=category, score=score, date=date,
                                        scorerNum=scorerNum)
@@ -95,6 +100,36 @@ class DoubanMovieSpider(scrapy.Spider):
 def mkdirs_if_not_exists(dir_):
     if not os.path.exists(dir_) or not os.path.isdir(dir_):
         os.makedirs(dir_)
+
+
+def get_max_pagenum(tag):
+    import requests
+    from bs4 import BeautifulSoup
+    headers = {
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Encoding': 'gzip, deflate, sdch, br',
+        'Accept-Language': 'zh-CN,zh;q=0.8,en;q=0.6',
+        'Host': 'movie.douban.com',
+        'Referer': 'https://movie.douban.com/tag/',
+        'Upgrade-Insecure-Requests': '1',
+        'User-Agent': 'Mozilla/5.0 (iPad; CPU OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+    }
+    response = requests.get('https://movie.douban.com/tag/%s' % tag, headers=headers)
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, 'html5lib')
+        max_pagenum = 1
+        try:
+            page_div = soup.find_all('div', class_='paginator')[0]
+            a_list = page_div.find_all('a')
+            max_pagenum = int(a_list[-2].get_text().strip())
+        except:
+            pass
+
+        print('getting max page num of %s is %d' % (tag, max_pagenum))
+        return max_pagenum
+    else:
+        return 0
 
 
 def insert_item(item):

@@ -18,6 +18,6 @@
     pip3 install -r requirements.txt  
 
 ## Note
-   V1.1.1_BETA is released.
+   V1.1.3_BETA is released.
    More features are being developed and will be released soon~
    
