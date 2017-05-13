@@ -77,8 +77,9 @@ class DoubanMovieSpider(scrapy.Spider):
             category = urllib.parse.unquote(response.url.split('?')[0].split('/')[-1])
             date = parse_date(
                 each_movie.xpath('tr/td[2]/div[@class="pl2"]/p[@class="pl"]/text()').extract_first().strip())
-            score = float(each_movie.xpath(
-                'tr/td[2]/div[@class="pl2"]/div[@class="star clearfix"]/span[@class="rating_nums"]/text()').extract_first().strip())
+            score_node = each_movie.xpath(
+                'tr/td[2]/div[@class="pl2"]/div[@class="star clearfix"]/span[@class="rating_nums"]/text()')
+            score = float(score_node.extract_first().strip()) if score_node is not None else 0
             scorerNum = int(parse_scorerNum(each_movie.xpath(
                 'tr/td[2]/div[@class="pl2"]/div[@class="star clearfix"]/span[@class="pl"]/text()').extract_first().strip()))
 
