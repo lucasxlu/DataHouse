@@ -1,3 +1,5 @@
+import configparser
+
 import pandas as pd
 from pymongo import MongoClient
 
@@ -14,11 +16,8 @@ def _connect_mongo(host, port, username, password, db):
     return conn[db]
 
 
-def read_mongo(db, collection, query={}, host='localhost', port=27017, username=None, password=None, no_id=True):
+def read_mongo(db, collection, query={}, no_id=True):
     """ Read from Mongo and Store into DataFrame """
-
-    # Connect to MongoDB
-    db = _connect_mongo(host=host, port=port, username=username, password=password, db=db)
 
     # Make a query to the specific DB and Collection
     cursor = db[collection].find(query)
@@ -31,3 +30,11 @@ def read_mongo(db, collection, query={}, host='localhost', port=27017, username=
         del df['_id']
 
     return df
+
+
+if __name__ == '__main__':
+    config = configparser.ConfigParser()
+    config.read('/home/lucasx/PycharmProjects/DataHouse/DataSet/mongodb_config.ini')
+    db = _connect_mongo(config['douban']['host'], int(config['douban']['port']), None, None, config['douban']['db'])
+    df = read_mongo(db, 'movie', query={}, no_id=True)
+    print(df)
