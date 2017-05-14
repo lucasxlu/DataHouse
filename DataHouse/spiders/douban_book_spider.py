@@ -3,6 +3,7 @@ import urllib.parse
 
 import pandas as pd
 import scrapy
+from pymongo import MongoClient
 
 from DataHouse.items import DoubanBook
 
@@ -82,12 +83,15 @@ class DoubanBookSpider(scrapy.Spider):
             douban_book = DoubanBook(title=title, url=url, image=image, category=category, score=score,
                                      scorerNum=scorerNum, price=price,
                                      publishDate=publishDate, publisher=publisher)
+            insert_item(dict(douban_book))
+
             douban_book_list.append(douban_book)
 
     def close(spider, reason):
-        df = pd.DataFrame(douban_book_list)
-        mkdirs_if_not_exists('./DataSet/douban/')
-        df.to_excel('./DataSet/douban/book/算法.xlsx', sheet_name='Books')
+        print('all books has been crawled done...')
+        # df = pd.DataFrame(douban_book_list)
+        # mkdirs_if_not_exists('./DataSet/douban/')
+        # df.to_excel('./DataSet/douban/book/算法.xlsx', sheet_name='Books')
 
 
 def get_max_pagenum(tag):
@@ -123,3 +127,9 @@ def get_max_pagenum(tag):
 def mkdirs_if_not_exists(dir_):
     if not os.path.exists(dir_) or not os.path.isdir(dir_):
         os.makedirs(dir_)
+
+
+def insert_item(item):
+    client = MongoClient()
+    db = client.douban.book
+    result = db.insert_one(item)
