@@ -68,15 +68,17 @@ class DoubanBookSpider(scrapy.Spider):
             title = each_book.xpath('div[@class="info"]/h2/a/@title').extract_first()
             image = each_book.xpath('div[@class="pic"]/a[@class="nbg"]/img/@src').extract_first()
             category = urllib.parse.unquote(response.url.split('?')[0].split('/')[-1])
-            price = each_book.xpath('div[@class="info"]/div[@class="pub"]/text()').extract_first().split('/')[
-                -1].strip()
-            publishDate = parse_date(
-                each_book.xpath('div[@class="info"]/div[@class="pub"]/text()').extract_first().split('/')[
-                    -2].strip())
-            score = float(each_book.xpath(
-                'div[@class="info"]/div[@class="star clearfix"]/span[@class="rating_nums"]/text()').extract_first().strip())
-            scorerNum = int(parse_scorerNum(each_book.xpath(
-                'div[@class="info"]/div[@class="star clearfix"]/span[@class="pl"]/text()').extract_first().strip()))
+            price_node = each_book.xpath('div[@class="info"]/div[@class="pub"]/text()').extract_first().split('/')[-1]
+            price = price_node.strip() if price_node is not None else None
+            publish_date_node = \
+                each_book.xpath('div[@class="info"]/div[@class="pub"]/text()').extract_first().split('/')[-2]
+            publishDate = parse_date(publish_date_node.strip()) if publish_date_node is not None else None
+            score_node = each_book.xpath(
+                'div[@class="info"]/div[@class="star clearfix"]/span[@class="rating_nums"]/text()')
+            score = float(score_node.extract_first().strip()) if score_node is not None else 0
+            score_num_node = each_book.xpath(
+                'div[@class="info"]/div[@class="star clearfix"]/span[@class="pl"]/text()').extract_first()
+            scorerNum = int(parse_scorerNum(score_num_node.strip())) if score_num_node is not None else 0
 
             douban_book = DoubanBook(title=title, url=url, image=image, category=category, score=score,
                                      scorerNum=scorerNum, price=price,
