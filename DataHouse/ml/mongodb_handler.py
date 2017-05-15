@@ -34,7 +34,7 @@ def read_mongo(db, collection, query={}, no_id=True):
 
 if __name__ == '__main__':
     config = configparser.ConfigParser()
-    config.read('/home/lucasx/PycharmProjects/DataHouse/DataSet/mongodb_config.ini')
+    config.read('/home/lucasx/PycharmProjects/DataHouse/DataHouse/config/mongodb_config.ini')
     db = _connect_mongo(config['douban']['host'], int(config['douban']['port']), None, None, config['douban']['db'])
     df = read_mongo(db, 'movie', query={}, no_id=True)
     print(df)

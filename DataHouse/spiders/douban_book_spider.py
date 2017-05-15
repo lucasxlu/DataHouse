@@ -73,8 +73,6 @@ class DoubanBookSpider(scrapy.Spider):
             publishDate = parse_date(
                 each_book.xpath('div[@class="info"]/div[@class="pub"]/text()').extract_first().split('/')[
                     -2].strip())
-            publisher = each_book.xpath('div[@class="info"]/div[@class="pub"]/text()').extract_first().split('/')[
-                -3].strip()
             score = float(each_book.xpath(
                 'div[@class="info"]/div[@class="star clearfix"]/span[@class="rating_nums"]/text()').extract_first().strip())
             scorerNum = int(parse_scorerNum(each_book.xpath(
@@ -82,7 +80,7 @@ class DoubanBookSpider(scrapy.Spider):
 
             douban_book = DoubanBook(title=title, url=url, image=image, category=category, score=score,
                                      scorerNum=scorerNum, price=price,
-                                     publishDate=publishDate, publisher=publisher)
+                                     publishDate=publishDate)
             insert_item(dict(douban_book))
 
             douban_book_list.append(douban_book)

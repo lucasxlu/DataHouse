@@ -31,7 +31,6 @@ class DoubanBook(scrapy.Item):
     scorerNum = scrapy.Field()
     price = scrapy.Field()
     publishDate = scrapy.Field()
-    publisher = scrapy.Field()
 
 
 class DoubanMovie(scrapy.Item):
