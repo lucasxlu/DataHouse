@@ -1,0 +1,6 @@
+# counting the number of movies
+use douban
+db.movie.count()
+
+# query all of the movies which score is greater than 8 and sort them by desc
+db.getCollection('movie').find({score: {$gt:8}}, {title:1, score:1, _id:0}).sort({score:-1})
