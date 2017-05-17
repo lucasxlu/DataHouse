@@ -18,7 +18,13 @@
     sudo pip3 install -r requirements.txt  
 
 
+## Report
+   The report of house price prediction has been released on [Zhihu](https://zhuanlan.zhihu.com/p/26949876) with my presentation [here](/Presentation/House_ML.pptx). 
+
+
 ## Note
    V1.1.3_BETA is released.
    More features are being developed and will be released soon~
+   
+
    
