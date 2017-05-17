@@ -15,7 +15,8 @@
    
    
 ## Installation
-    pip3 install -r requirements.txt  
+    sudo pip3 install -r requirements.txt  
+
 
 ## Note
    V1.1.3_BETA is released.
