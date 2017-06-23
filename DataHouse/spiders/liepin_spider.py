@@ -36,25 +36,29 @@ class LiePinSpider(scrapy.Spider):
         soup = BeautifulSoup(response.text, 'html5lib')
         joblist_ul = soup.find_all(class_='sojob-list')[0]
         for li in joblist_ul.find_all('li'):
-            isVerified = True if li.i.b is not None else False
-            title = li.div.div.h3.a.get_text().strip()
-            jobid = li.div.div.h3.a['href'].strip().split('/')[-1].replace('.shtml', '')
-            salary = li.div.div.p['title'].split('_')[0].strip()
-            location = li.div.div.p['title'].split('_')[1].strip()
-            education = li.div.div.p['title'].split('_')[2].strip()
-            experience = li.div.div.p['title'].split('_')[2].strip()
+            try:
+                isVerified = True if li.i.b is not None else False
+                title = li.div.div.h3.a.get_text().strip()
+                jobid = li.div.div.h3.a['href'].strip().split('/')[-1].replace('.shtml', '')
+                salary = li.div.div.p['title'].split('_')[0].strip()
+                location = li.div.div.p['title'].split('_')[1].strip()
+                education = li.div.div.p['title'].split('_')[2].strip()
+                experience = li.div.div.p['title'].split('_')[2].strip()
 
-            publishTime = li.find(class_="time-info clearfix").time.get_text().strip()
-            feedback = li.find(class_="time-info clearfix").span.get_text().strip()
+                publishTime = li.find(class_="time-info clearfix").time.get_text().strip()
+                feedback = li.find(class_="time-info clearfix").span.get_text().strip()
 
-            company = li.find(class_="company-info nohover").find_all('p')[0].a.get_text().strip()
-            industryField = li.find(class_="company-info nohover").find_all('p')[1].span.a.get_text().strip()
-            tags = [_.get_text().strip() for _ in
-                    li.find(class_="company-info nohover").find_all('p')[2].find_all('span')]
+                company = li.find(class_="company-info nohover").find_all('p')[0].a.get_text().strip()
+                industryField = li.find(class_="company-info nohover").find_all('p')[1].span.a.get_text().strip()
+                tags = [_.get_text().strip() for _ in
+                        li.find(class_="company-info nohover").find_all('p')[2].find_all('span')]
 
-            liepin = LiePin(jobid=jobid, title=title, salary=salary, location=location, education=education,
-                            experience=experience, company=company, industryField=industryField, tags=tags,
-                            publishTime=publishTime, feedback=feedback, isVerified=isVerified)
+                liepin = LiePin(jobid=jobid, title=title, salary=salary, location=location, education=education,
+                                experience=experience, company=company, industryField=industryField, tags=tags,
+                                publishTime=publishTime, feedback=feedback, isVerified=isVerified)
+                liepin_job_list.append(liepin)
+            except:
+                pass
 
             def parse_detail_page(job_id):
                 """
@@ -73,7 +77,14 @@ class LiePinSpider(scrapy.Spider):
                     print('ERROR!!!')
                 return desciption
 
-            print(parse_detail_page(jobid))
+            def write_txt(content, jobid):
+                with open(os.path.join(LIEPIN_JOB_DATA_DIR, '%s.txt') % jobid, mode='wt', encoding='UTF-8') as f:
+                    f.write(content)
+                    f.flush()
+                    f.close()
+
+            description = parse_detail_page(liepin.jobid)
+            write_txt(description, liepin.jobid)
 
     def close(spider, reason):
         df = pd.DataFrame(liepin_job_list)
