@@ -50,3 +50,18 @@ class DoubanMovie(scrapy.Item):
         yield 'score', self.score
         yield 'scorerNum', self.scorerNum
         yield 'date', self.date
+
+
+class LiePin(scrapy.Item):
+    jobid = scrapy.Field()
+    title = scrapy.Field()
+    salary = scrapy.Field()
+    location = scrapy.Field()
+    education = scrapy.Field()
+    experience = scrapy.Field()
+    company = scrapy.Field()
+    industryField = scrapy.Field()
+    tags = scrapy.Field()
+    publishTime = scrapy.Field()
+    feedback = scrapy.Field()
+    isVerified = scrapy.Field()
