@@ -38,17 +38,17 @@ DOWNLOAD_DELAY = 3
 # TELNETCONSOLE_ENABLED = False
 
 # Override the default request headers:
-DEFAULT_REQUEST_HEADERS = {
-    ':authority': 'm.anjuke.com',
-    ':method': 'GET',
-    ':path': '/wh/community/?from=commu&p=3',
-    ':scheme': 'https',
-    'accept': 'text/html',
-    'referer': 'https://m.anjuke.com/wh/community/?from=commu',
-    'upgrade-insecure-requests': 1,
-    'x-requested-with': 'XMLHttpRequest',
-    'user-agent': 'Mozilla/5.0 (Linux; Android 5.1.1; Nexus 6 Build/LYZ28E) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.96 Mobile Safari/537.36'
-}
+# DEFAULT_REQUEST_HEADERS = {
+#     ':authority': 'm.anjuke.com',
+#     ':method': 'GET',
+#     ':path': '/wh/community/?from=commu&p=3',
+#     ':scheme': 'https',
+#     'accept': 'text/html',
+#     'referer': 'https://m.anjuke.com/wh/community/?from=commu',
+#     'upgrade-insecure-requests': 1,
+#     'x-requested-with': 'XMLHttpRequest',
+#     'user-agent': 'Mozilla/5.0 (Linux; Android 5.1.1; Nexus 6 Build/LYZ28E) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.96 Mobile Safari/537.36'
+# }
 
 # Enable or disable spider middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html

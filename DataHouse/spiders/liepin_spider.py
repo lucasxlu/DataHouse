@@ -1,5 +1,5 @@
-import datetime
 import os
+import time
 import urllib.parse
 
 import pandas as pd
@@ -9,8 +9,9 @@ from bs4 import BeautifulSoup
 from DataHouse.items import LiePin
 
 liepin_job_list = []
-LIEPIN_JOB_DATA_DIR = '../DataSet/liepin/'
-JOB_LIST = ['python', '']
+LIEPIN_JOB_DATA_DIR = './DataSet/liepin/'
+JOB_LIST = ['机器学习']
+SLEEP_TIME = 3
 
 
 class LiePinSpider(scrapy.Spider):
@@ -27,8 +28,8 @@ class LiePinSpider(scrapy.Spider):
         if os.path.exists(LIEPIN_JOB_DATA_DIR):
             os.removedirs(LIEPIN_JOB_DATA_DIR)
         os.makedirs(LIEPIN_JOB_DATA_DIR)
-        urls = ['https://www.liepin.com/zhaopin/?fromSearchBtn=2&degradeFlag=0&init=-1&key=python&curPage=%s' % str(i)
-                for i in range(10)]
+        urls = ['https://www.liepin.com/zhaopin/?fromSearchBtn=2&degradeFlag=0&init=-1&key=' +
+                urllib.parse.quote('机器学习') + '&curPage=%s' % str(i) for i in range(100)]
         for url in urls:
             yield scrapy.Request(url=url, callback=self.parse, headers=self.headers)
 
@@ -36,29 +37,27 @@ class LiePinSpider(scrapy.Spider):
         soup = BeautifulSoup(response.text, 'html5lib')
         joblist_ul = soup.find_all(class_='sojob-list')[0]
         for li in joblist_ul.find_all('li'):
-            try:
-                isVerified = True if li.i.b is not None else False
-                title = li.div.div.h3.a.get_text().strip()
-                jobid = li.div.div.h3.a['href'].strip().split('/')[-1].replace('.shtml', '')
-                salary = li.div.div.p['title'].split('_')[0].strip()
-                location = li.div.div.p['title'].split('_')[1].strip()
-                education = li.div.div.p['title'].split('_')[2].strip()
-                experience = li.div.div.p['title'].split('_')[2].strip()
+            isVerified = True if li.i.b is not None else False
+            title = li.div.div.h3.a.get_text().strip()
+            jobid = li.div.div.h3.a['href'].strip().split('/')[-1].replace('.shtml', '')
+            salary = li.div.div.p['title'].split('_')[0].strip()
+            location = li.div.div.p['title'].split('_')[1].strip()
+            education = li.div.div.p['title'].split('_')[2].strip()
+            experience = li.div.div.p['title'].split('_')[2].strip()
 
-                publishTime = li.find(class_="time-info clearfix").time.get_text().strip()
-                feedback = li.find(class_="time-info clearfix").span.get_text().strip()
+            publishTime = li.find(class_="time-info clearfix").time.get_text().strip()
+            feedback = li.find(class_="time-info clearfix").span.get_text().strip()
 
-                company = li.find(class_="company-info nohover").find_all('p')[0].a.get_text().strip()
-                industryField = li.find(class_="company-info nohover").find_all('p')[1].span.a.get_text().strip()
-                tags = [_.get_text().strip() for _ in
-                        li.find(class_="company-info nohover").find_all('p')[2].find_all('span')]
+            company = li.find(class_="company-info nohover").find_all('p')[0].a.get_text().strip()
+            industryField = li.find(class_="company-info nohover").find_all('p')[1].span.a.get_text().strip()
+            tags = [_.get_text().strip() for _ in
+                    li.find(class_="company-info nohover").find_all('p')[2].find_all('span')]
 
-                liepin = LiePin(jobid=jobid, title=title, salary=salary, location=location, education=education,
-                                experience=experience, company=company, industryField=industryField, tags=tags,
-                                publishTime=publishTime, feedback=feedback, isVerified=isVerified)
-                liepin_job_list.append(liepin)
-            except:
-                pass
+            liepin = LiePin(jobid=jobid, title=title, salary=salary, location=location, education=education,
+                            experience=experience, company=company, industryField=industryField, tags=tags,
+                            publishTime=publishTime, feedback=feedback, isVerified=isVerified)
+            liepin_job_list.append(liepin)
+            print(liepin)
 
             def parse_detail_page(job_id):
                 """
@@ -66,16 +65,22 @@ class LiePinSpider(scrapy.Spider):
                 :param job_id:
                 :return:
                 """
+                headers = {
+                    'Host': 'www.liepin.com',
+                    'Upgrade-Insecure-Requests': '1',
+                    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                                  'Ubuntu Chromium/58.0.3029.110 Chrome/58.0.3029.110 Safari/537.36'
+                }
                 desciption = ''
                 import requests
-                response = requests.get('https://www.liepin.com/job/%s.shtml' % str(job_id), headers=self.headers)
+                response = requests.get('https://www.liepin.com/job/%s.shtml' % str(job_id), headers=headers)
                 if response.status_code == 200:
                     soup = BeautifulSoup(response.text, 'html5lib')
                     for _ in soup.find_all(class_="job-item main-message"):
                         desciption += _.get_text().strip()
                 else:
                     print('ERROR!!!')
-                return desciption
+                return desciption.strip().replace(' ', '')
 
             def write_txt(content, jobid):
                 with open(os.path.join(LIEPIN_JOB_DATA_DIR, '%s.txt') % jobid, mode='wt', encoding='UTF-8') as f:
@@ -83,9 +88,10 @@ class LiePinSpider(scrapy.Spider):
                     f.flush()
                     f.close()
 
-            description = parse_detail_page(liepin.jobid)
-            write_txt(description, liepin.jobid)
+            description = parse_detail_page(jobid)
+            write_txt(description, jobid)
+        time.sleep(SLEEP_TIME)
 
     def close(spider, reason):
         df = pd.DataFrame(liepin_job_list)
-        # df.to_excel('./DataSet/liepin.xlsx', sheet_name='JobInfo')
+        df.to_excel('./DataSet/liepin-ML.xlsx', sheet_name='JobInfo')
