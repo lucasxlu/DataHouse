@@ -4,6 +4,10 @@
    This repository is designed for data analysis and data visualization in house price.
    We collect all the data with [scrapy](https://docs.scrapy.org/en/latest/index.html) and [requests](http://www.python-requests.org/en/master/), data pre-processing and machine learning with [scikit-learn](http://scikit-learn.org/stable/) and [pandas](http://pandas.pydata.org/).
    Data storing with [MongoDB](https://docs.mongodb.com/).
+   
+   There are several modules belongs to different application.  
+   * [JobCn](DataHouse/jobcn)
+   * [Douban Books]
     
 ## Prerequisite
    > Python version >= 3.4  

@@ -11,7 +11,11 @@ base_url = 'http://www.jobcn.com/search/listalljob_servlet.ujson'
 user_agent = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.7 Safari/537.36'
 
 
-def crawl(jobFunction, jobname, pagenum):
+class JobCn(object):
+    pass
+
+
+def crawl(jobFunction, pagenum):
     payload = {'p.keyword': '', 'p.keyword2': '', 'p.keywordType': '', 'p.pageNo': pagenum, 'p.pageSize': 40,
                'p.sortBy': 'postdate', 'p.statistics': 'false', 'p.totalRow': '', 'p.cachePageNo': 1,
                'p.cachePosIds': '', 'p.cachePosUpddates': '', 'p.jobFunction': jobFunction}
@@ -24,9 +28,10 @@ def crawl(jobFunction, jobname, pagenum):
     if r.status_code == 200:
         print(r.json())
 
-        return r.text
+        return r.json()
     elif r.status_code == 403:
         print('Access Denied!')
+        return None
 
 
 def get_max_page(jobFunction):
@@ -46,6 +51,11 @@ def get_max_page(jobFunction):
 
 
 def get_xml_joblist(job_xml_path):
+    """
+    read job params from job.xml
+    :param job_xml_path:
+    :return:
+    """
     tree = etree.parse(job_xml_path)
     job_info = {}
     for each_job_node in tree.findall('//job'):
@@ -57,6 +67,7 @@ def get_xml_joblist(job_xml_path):
     return job_info
 
 
+"""
 def json_file_to_list(each_job_json_dir):
     joblist = []
     for each_job_json in os.listdir(each_job_json_dir):
@@ -68,13 +79,12 @@ def json_file_to_list(each_job_json_dir):
                 except:
                     pass
     return joblist
+"""
 
 
 def write_excel(lists, filename):
     wb = Workbook()
     ws = wb.active
-    # ws.print_options.verticalCentered = True
-    # ws.print_options.horizontalCentered = True
     ws.title = "职位信息"
     ws.cell(row=1, column=1).value = '职位ID'
     ws.cell(row=1, column=2).value = '职位名称'
@@ -93,51 +103,58 @@ def write_excel(lists, filename):
 
     rownum = 2
 
-    for each_item in lists:
-        info_list = each_item.get('rows')
-        for each_job_info_obj in info_list:
-            ws.cell(row=rownum, column=1).value = each_job_info_obj['posId']
-            ws.cell(row=rownum, column=2).value = each_job_info_obj['posName']
-            ws.cell(row=rownum, column=3).value = each_job_info_obj['deptName']
-            ws.cell(row=rownum, column=4).value = each_job_info_obj['comName']
-            ws.cell(row=rownum, column=5).value = each_job_info_obj['salaryDesc']
-            ws.cell(row=rownum, column=6).value = each_job_info_obj['reqDegree']
-            ws.cell(row=rownum, column=7).value = each_job_info_obj['benefitTags']
-            ws.cell(row=rownum, column=8).value = each_job_info_obj['ageDesc']
-            ws.cell(row=rownum, column=9).value = each_job_info_obj['workYearDesc']
-            ws.cell(row=rownum, column=10).value = each_job_info_obj['candidatesNum']
-            ws.cell(row=rownum, column=11).value = each_job_info_obj['jobLocation']
-            ws.cell(row=rownum, column=12).value = each_job_info_obj['email']
-            ws.cell(row=rownum, column=13).value = each_job_info_obj['contactTel']
-            ws.cell(row=rownum, column=14).value = each_job_info_obj['comId']
-            rownum += 1
-    wb.save('./%s.xlsx' % filename)
+    for _ in lists:
+        ws.cell(row=rownum, column=1).value = _.posId
+        ws.cell(row=rownum, column=2).value = _.posName
+        ws.cell(row=rownum, column=3).value = _.deptName
+        ws.cell(row=rownum, column=4).value = _.comName
+        ws.cell(row=rownum, column=5).value = _.salaryDesc
+        ws.cell(row=rownum, column=6).value = _.reqDegree
+        ws.cell(row=rownum, column=7).value = _.benefitTags
+        ws.cell(row=rownum, column=8).value = _.ageDesc
+        ws.cell(row=rownum, column=9).value = _.workYearDesc
+        ws.cell(row=rownum, column=10).value = _.candidatesNum
+        ws.cell(row=rownum, column=11).value = _.jobLocation
+        ws.cell(row=rownum, column=12).value = _.email
+        ws.cell(row=rownum, column=13).value = _.contactTel
+        ws.cell(row=rownum, column=14).value = _.comId
+    wb.save(os.path.join(JOBCN_DATA_DIR, '%s.xlsx' % filename))
     print('Excel generates successfully......')
 
 
 def start():
     job_info = get_xml_joblist('job.xml')
     for key, value in job_info.items():
+        joblist = []
         '''get the max page number via jobFunction value'''
         max_page = get_max_page(key)
-        print('is crawling ' + value + ' \' data......')
+        print('is crawling %s data......' % value)
         index = 1
         while index <= max_page:
-            json_obj = crawl(key, value, index)
-            if os.path.exists(os.path.join(JOBCN_DATA_DIR, value)) is False or os.path.isdir(
-                    os.path.join(JOBCN_DATA_DIR, value)) is False:
-                os.makedirs(os.path.join(JOBCN_DATA_DIR, value))
-            with open(os.path.join(JOBCN_DATA_DIR, value + '/%s.json' % str(index)), mode='wt', encoding='utf-8') as f:
-                f.write(json_obj)
-            index += 1
+            json_obj = crawl(key, index)
+            if json_obj is not None:
+                for _ in json_obj['rows']:
+                    jobcn = JobCn()
+                    jobcn.posId = _['posId']
+                    jobcn.posName = _['posName']
+                    jobcn.deptName = _['deptName']
+                    jobcn.comName = _['comName']
+                    jobcn.salaryDesc = _['salaryDesc']
+                    jobcn.reqDegree = _['reqDegree']
+                    jobcn.benefitTags = _['benefitTags']
+                    jobcn.ageDesc = _['ageDesc']
+                    jobcn.workYearDesc = _['workYearDesc']
+                    jobcn.candidatesNum = _['candidatesNum']
+                    jobcn.jobLocation = _['jobLocation']
+                    jobcn.email = _['email']
+                    jobcn.contactTel = _['contactTel']
+                    jobcn.comId = _['comId']
+                    joblist.append(jobcn)
+                index += 1
 
         print('%s\'s data is finished......' % value)
         time.sleep(2)
-
-    print('start outputting Excel file......')
-    for each_job_dir in os.listdir(JOBCN_DATA_DIR):
-        joblist = json_file_to_list(os.path.join(JOBCN_DATA_DIR, each_job_dir))
-        write_excel(joblist, each_job_dir)
+        write_excel(joblist, value)
 
 
 if __name__ == '__main__':
