@@ -1,6 +1,6 @@
 import os
 import time
-import json
+import shutil
 
 import requests
 from lxml import etree
@@ -102,7 +102,6 @@ def write_excel(lists, filename):
     ws.cell(row=1, column=14).value = '公司ID'
 
     rownum = 2
-
     for _ in lists:
         ws.cell(row=rownum, column=1).value = _.posId
         ws.cell(row=rownum, column=2).value = _.posName
@@ -118,11 +117,15 @@ def write_excel(lists, filename):
         ws.cell(row=rownum, column=12).value = _.email
         ws.cell(row=rownum, column=13).value = _.contactTel
         ws.cell(row=rownum, column=14).value = _.comId
+        rownum += 1
     wb.save(os.path.join(JOBCN_DATA_DIR, '%s.xlsx' % filename))
     print('Excel generates successfully......')
 
 
 def start():
+    if os.path.exists(JOBCN_DATA_DIR):
+        shutil.rmtree(JOBCN_DATA_DIR)
+    os.makedirs(JOBCN_DATA_DIR)
     job_info = get_xml_joblist('job.xml')
     for key, value in job_info.items():
         joblist = []
