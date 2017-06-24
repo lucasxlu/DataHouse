@@ -2,6 +2,6 @@
 .idea
 DataHouse/__pycache__/
 DataHouse/crawler/__pycache__/
-DataHouse/ml/loginfo.log
 DataHouse/spiders/__pycache__/
 DataSet/liepin
+/DataHouse/ml/loginfo.log

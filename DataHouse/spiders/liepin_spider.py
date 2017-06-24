@@ -37,7 +37,14 @@ class LiePinSpider(scrapy.Spider):
         soup = BeautifulSoup(response.text, 'html5lib')
         joblist_ul = soup.find_all(class_='sojob-list')[0]
         for li in joblist_ul.find_all('li'):
-            isVerified = True if li.i.b is not None else False
+            if li.i.b.get_text().strip() == '企':
+                jobProperty = '企'
+            elif li.i.b.get_text().strip() == '猎':
+                jobProperty = '猎'
+            elif li.i.b.get_text().strip() == '急':
+                jobProperty = '急'
+            else:
+                jobProperty = '无'
             title = li.div.div.h3.a.get_text().strip()
             jobid = li.div.div.h3.a['href'].strip().split('/')[-1].replace('.shtml', '')
             salary = li.div.div.p['title'].split('_')[0].strip()
@@ -55,7 +62,7 @@ class LiePinSpider(scrapy.Spider):
 
             liepin = LiePin(jobid=jobid, title=title, salary=salary, location=location, education=education,
                             experience=experience, company=company, industryField=industryField, tags=tags,
-                            publishTime=publishTime, feedback=feedback, isVerified=isVerified)
+                            publishTime=publishTime, feedback=feedback, jobProperty=jobProperty)
             liepin_job_list.append(liepin)
             print(liepin)
 
@@ -76,11 +83,11 @@ class LiePinSpider(scrapy.Spider):
                 response = requests.get('https://www.liepin.com/job/%s.shtml' % str(job_id), headers=headers)
                 if response.status_code == 200:
                     soup = BeautifulSoup(response.text, 'html5lib')
-                    for _ in soup.find_all(class_="job-item main-message"):
+                    for _ in soup.find_all(class_="content content-word"):
                         desciption += _.get_text().strip()
                 else:
                     print('ERROR!!!')
-                return desciption.strip().replace(' ', '')
+                return desciption.strip()
 
             def write_txt(content, jobid):
                 with open(os.path.join(LIEPIN_JOB_DATA_DIR, '%s.txt') % jobid, mode='wt', encoding='UTF-8') as f:

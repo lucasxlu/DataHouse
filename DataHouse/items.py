@@ -64,4 +64,4 @@ class LiePin(scrapy.Item):
     tags = scrapy.Field()
     publishTime = scrapy.Field()
     feedback = scrapy.Field()
-    isVerified = scrapy.Field()
+    jobProperty = scrapy.Field()
