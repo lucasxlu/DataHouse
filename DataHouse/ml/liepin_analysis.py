@@ -1,3 +1,6 @@
+"""
+Data mining and NLP task with liepin job detailed description corpus.
+"""
 import logging
 import os
 
@@ -12,11 +15,32 @@ USER_DICT = 'userdict.txt'
 
 def main(documents):
     # remove common words and tokenize
-    stoplist = get_stopwords()
-    texts = [[word for word in document.lower().split() if word not in stoplist] for document in documents]
+    texts = [cut_words(document) for document in documents]
+    dictionary = corpora.Dictionary(texts)
+
+    class MyCorpus(object):
+        def __iter__(self):
+            with open('/home/lucasx/PycharmProjects/DataHouse/DataSet/liepin/191938818.txt', mode='rt',
+                      encoding='UTF-8') as f:
+                # assume there's one document per line, tokens separated by whitespace
+                yield dictionary.doc2bow(cut_words(''.join(f.readlines())))
+
+    print(dictionary.doc2bow(
+        cut_words(read_document_from_text('/home/lucasx/PycharmProjects/DataHouse/DataSet/liepin/191938818.txt'))))
+    print('===========================================')
+    corpus_memory_friendly = MyCorpus()
+    tfidf = models.TfidfModel(corpus_memory_friendly)  # step 1 -- initialize a model
+    corpus_tfidf = tfidf[corpus_memory_friendly]
+    for doc in corpus_tfidf:
+        print(doc)
 
 
 def get_stopwords(stopwords_filepath):
+    """
+    read stopwords and return as a python list
+    :param stopwords_filepath:
+    :return:
+    """
     with open(stopwords_filepath, mode='rt', encoding='UTF-8') as f:
         stopwords = f.readlines()
         f.close()
@@ -46,10 +70,18 @@ def get_tfidf_top_words(documents):
 
 
 def cut_words(document):
-    pass
+    """
+    cut the document text and return its word list
+    :param document:
+    :return:
+    """
+    jieba.load_userdict(USER_DICT)
+    jieba.analyse.set_stop_words(STOPWORDS_FILE)
+    seg_list = jieba.cut(document, cut_all=True)
+    return seg_list
 
 
 if __name__ == '__main__':
     document_dir = '/home/lucasx/PycharmProjects/DataHouse/DataSet/liepin/'
     documents = [read_document_from_text(os.path.join(document_dir, _)) for _ in os.listdir(document_dir)]
-    print(get_tfidf_top_words(documents))
+    main(documents)
