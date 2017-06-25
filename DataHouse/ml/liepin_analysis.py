@@ -3,38 +3,77 @@ Data mining and NLP task with liepin job detailed description corpus.
 """
 import logging
 import os
+from shutil import copyfile
 
 import gensim
-from gensim import corpora, models, similarities
 import jieba
 import jieba.analyse
+from gensim.models import Word2Vec
+from sklearn.cluster import KMeans
+from sklearn.feature_extraction.text import TfidfTransformer, HashingVectorizer
+from sklearn.pipeline import make_pipeline
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 STOPWORDS_FILE = 'stopwords.txt'
 USER_DICT = 'userdict.txt'
 DOCUMENT_DIR = '/home/lucasx/PycharmProjects/DataHouse/DataSet/liepin/'
+WORD2VEC_SAVE_PATH = '/tmp/word2vector2.model'
+FEATURE_NUM = 30
+CLUSTER_NUM = 10
 
 
-def main(documents):
-    # remove common words and tokenize
-    texts = [cut_words(document) for document in documents]
-    dictionary = corpora.Dictionary(texts)
+def train_word2vec():
+    """
+    train word2vec model
+    :return:
+    """
 
     class MyCorpus(object):
-        def __init__(self, dirname):
-            self.dirname = dirname
+        def __init__(self):
+            pass
 
         def __iter__(self):
-            for fname in os.listdir(self.dirname):
-                with open(os.path.join(self.dirname, fname), mode='rt',
-                          encoding='UTF-8') as f:
-                    yield cut_words(''.join(f.readlines()))
+            for fname in os.listdir(DOCUMENT_DIR):
+                text = read_document_from_text(os.path.join(DOCUMENT_DIR, fname))
+                segmented_words = '/'.join(cut_words(''.join(text))).split('/')
+                yield segmented_words
 
-    sentences = MyCorpus(DOCUMENT_DIR)
-    model = gensim.models.Word2Vec(sentences=sentences, iter=5, min_count=3, size=100, workers=2)
-    model.build_vocab(sentences=sentences)
-    model.train(sentences=sentences)
-    model.accuracy('/tmp/questions-words.txt')
+    sentences = MyCorpus()
+    model = gensim.models.Word2Vec(sentences, workers=8)
+
+    model.save(WORD2VEC_SAVE_PATH)
+    # print(model.similarity('机器学习', '深度学习'))
+
+
+def word2vector(word):
+    model = Word2Vec.load(WORD2VEC_SAVE_PATH)
+
+    return model[word]
+
+
+def documents_to_tfidf_vec(documents):
+    transformer = TfidfTransformer(smooth_idf=True)
+    hasher = HashingVectorizer(n_features=FEATURE_NUM,
+                               stop_words=get_stopwords(STOPWORDS_FILE), non_negative=True,
+                               norm=None, binary=False)
+    vectorizer = make_pipeline(hasher, transformer)
+    X = vectorizer.fit_transform(documents)
+
+    return X
+
+
+def kmeans_cluster(feature_matrix):
+    km = KMeans(n_clusters=CLUSTER_NUM, init='k-means++', max_iter=100, n_init=1, verbose=True)
+    km.fit(feature_matrix)
+
+    print('=======================================')
+    folder = '/tmp/liepin/'
+    for _ in os.listdir(DOCUMENT_DIR):
+        X = documents_to_tfidf_vec([read_document_from_text(os.path.join(DOCUMENT_DIR, _))])
+        label_ = str(km.predict(X).astype(int))
+        if os.path.exists(os.path.join(folder, label_)) is False:
+            os.makedirs(os.path.join(folder, label_))
+        copyfile(os.path.join(DOCUMENT_DIR, _), os.path.join(folder, label_, _))
 
 
 def get_stopwords(stopwords_filepath):
@@ -64,6 +103,11 @@ def read_document_from_text(text_filepath):
 
 
 def get_tfidf_top_words(documents):
+    """
+    calculate the top hot 30 keywords with TF-IDF value
+    :param documents:
+    :return:
+    """
     jieba.load_userdict(USER_DICT)
     jieba.analyse.set_stop_words(STOPWORDS_FILE)
     hot_words = jieba.analyse.extract_tags(''.join(documents), topK=30, withWeight=True, allowPOS=(), withFlag=True)
@@ -80,9 +124,15 @@ def cut_words(document):
     jieba.load_userdict(USER_DICT)
     jieba.analyse.set_stop_words(STOPWORDS_FILE)
     seg_list = jieba.cut(document, cut_all=True)
-    return seg_list
+    return '/'.join(seg_list).split('/')
 
 
 if __name__ == '__main__':
+    # train_word2vec()
+    model = Word2Vec.load(WORD2VEC_SAVE_PATH)
+    print(model.similarity('阿里巴巴', '腾讯'))
+
     documents = [read_document_from_text(os.path.join(DOCUMENT_DIR, _)) for _ in os.listdir(DOCUMENT_DIR)]
-    main(documents)
+
+    X = documents_to_tfidf_vec(documents)
+    kmeans_cluster(X)
