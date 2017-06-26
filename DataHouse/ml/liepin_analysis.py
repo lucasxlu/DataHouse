@@ -74,6 +74,7 @@ def kmeans_cluster(feature_matrix):
         if os.path.exists(os.path.join(folder, label_)) is False:
             os.makedirs(os.path.join(folder, label_))
         copyfile(os.path.join(DOCUMENT_DIR, _), os.path.join(folder, label_, _))
+    print('processing done!!')
 
 
 def get_stopwords(stopwords_filepath):
@@ -129,8 +130,8 @@ def cut_words(document):
 
 if __name__ == '__main__':
     # train_word2vec()
-    model = Word2Vec.load(WORD2VEC_SAVE_PATH)
-    print(model.similarity('阿里巴巴', '腾讯'))
+    # model = Word2Vec.load(WORD2VEC_SAVE_PATH)
+    # print(model.similarity('阿里巴巴', '腾讯'))
 
     documents = [read_document_from_text(os.path.join(DOCUMENT_DIR, _)) for _ in os.listdir(DOCUMENT_DIR)]
 
