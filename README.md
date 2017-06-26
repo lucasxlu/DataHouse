@@ -1,7 +1,7 @@
 # Data Mining Workspace
 
 ## Introduction
-   This repository is designed for data analysis and data visualization in house price.
+   This repository is designed for data analysis and data visualization in house price, job interviewing and SNS data mining.
    We collect all the data with [scrapy](https://docs.scrapy.org/en/latest/index.html) and [requests](http://www.python-requests.org/en/master/), data pre-processing and machine learning with [scikit-learn](http://scikit-learn.org/stable/) and [pandas](http://pandas.pydata.org/).
    Data storing with [MongoDB](https://docs.mongodb.com/).
    
@@ -10,6 +10,9 @@
    * [Douban Book](DataHouse/spiders/douban_book_spider.py)
    * [Douban Movie](DataHouse/spiders/douban_movie_spider.py)
    * [Anjuku](DataHouse/spiders/anjuke_spider.py)
+   * [fang.com](DataHouse/crawler/fang_crawler.py)
+   * [Lian Jia](DataHouse/crawler/lianjia_crawler.py)
+   * [LiePin](DataHouse/spiders/liepin_spider.py)
     
 ## Prerequisite
    > Python version >= 3.4  
@@ -29,8 +32,5 @@
 
 
 ## Note
-   V1.1.3_BETA is released.
-   More features are being developed and will be released soon~
-   
-
-   
+   V1.2.0_r is released.
+   More features are being developed and will be released soon~  
