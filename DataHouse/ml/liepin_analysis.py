@@ -19,7 +19,7 @@ USER_DICT = 'userdict.txt'
 DOCUMENT_DIR = '/home/lucasx/PycharmProjects/DataHouse/DataSet/liepin/'
 WORD2VEC_SAVE_PATH = '/tmp/word2vector2.model'
 FEATURE_NUM = 30
-CLUSTER_NUM = 10
+CLUSTER_NUM = 6
 
 
 def train_word2vec():

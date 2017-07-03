@@ -8,9 +8,12 @@ from gensim.models import Word2Vec
 from sklearn.feature_extraction.text import TfidfTransformer, HashingVectorizer
 from sklearn.pipeline import make_pipeline
 from sklearn.neural_network import MLPClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn import tree
+from sklearn.neighbors.nearest_centroid import NearestCentroid
 
 TEXT_DIR = '/home/lucasx/Desktop/corpus_6_4000/'
-FEATURE_NUM = 30
+FEATURE_NUM = 300
 STOPWORDS_FILE = 'stopwords.txt'
 USER_DICT = 'userdict.txt'
 
@@ -122,6 +125,19 @@ if __name__ == '__main__':
 
     print('=' * 100)
     print('start launching MLP Classifier......')
-    mlp = MLPClassifier(solver='lbfgs', alpha=1e-4, hidden_layer_sizes=(50, 30, 30, 20), random_state=1)
+    mlp = MLPClassifier(solver='lbfgs', alpha=1e-4, hidden_layer_sizes=(50, 30, 20, 20), random_state=1)
     mlp.fit(train_X, training_label)
     print('finish launching MLP Classifier, the test accuracy is {:.5%}'.format(mlp.score(test_X, test_label)))
+
+    print('=' * 100)
+    print('start launching Decision Tree Classifier......')
+    dtree = tree.DecisionTreeClassifier()
+    dtree.fit(train_X, training_label)
+    print('finish launching Decision Tree Classifier, the test accuracy is {:.5%}'.format(
+        dtree.score(test_X, test_label)))
+
+    print('=' * 100)
+    print('start launching KNN Classifier......')
+    knn = NearestCentroid()
+    knn.fit(train_X, training_label)
+    print('finish launching KNN Classifier, the test accuracy is {:.5%}'.format(knn.score(test_X, test_label)))
