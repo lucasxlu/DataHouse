@@ -15,12 +15,19 @@ from sklearn.neighbors.nearest_centroid import NearestCentroid
 TEXT_DIR = '/home/lucasx/Desktop/corpus_6_4000/'
 # TEXT_DIR = '/home/lucasx/Desktop/20_newsgroups/'
 # TEXT_DIR = '/home/lucasx/Desktop/FudanNLPCorpus/'
-FEATURE_NUM = 30000
+FEATURE_NUM = 5000
 STOPWORDS_FILE = 'stopwords.txt'
 USER_DICT = 'userdict.txt'
+WORD2VEC_SAVE_PATH = '/tmp/word2vector2.model'
 
 
-def init_train_and_test_dataset(dir_):
+def split_corpus_6_4000_train_and_test_dataset(dir_):
+    """
+    init the corpus_6_4000 text data and return the feature vectors in TF-IDF mode
+    :param dir_:
+    :return:
+    """
+
     def get_all_categories(dir_):
         category_list = []
         for _ in os.listdir(dir_):
@@ -73,13 +80,23 @@ def init_train_and_test_dataset(dir_):
         test_text += [read_document_from_text(_) for _ in filepath_list]
         test_label += [label for _ in range(len(filepath_list))]
 
+    return training_text, training_label, test_text, test_label
+
+
+def get_corpus_6_4000_feature_veactor_in_tf_idf(training_text, test_text):
     training_X = documents_to_tfidf_vec(training_text)
     test_X = documents_to_tfidf_vec(test_text)
 
-    return training_X, training_label, test_X, test_label
+    return training_X, test_X
 
 
 def init_20groups_data(base_dir):
+    """
+    init training and test text data and return the feature vector in TF-IDF mode
+    :param base_dir:
+    :return:
+    """
+
     def get_labels():
         label_and_num = {}
         i = 0
@@ -108,6 +125,18 @@ def init_20groups_data(base_dir):
     test_X = documents_to_tfidf_vec(test_set)
 
     return train_X, training_label, test_X, test_label
+
+
+def init_corpus_6_4000_in_word2vec(training_text, test_text):
+    train_X = []
+    test_X = []
+    for text in training_text:
+        train_X.append([word2vector(word) for word in cut_words(text)])
+
+    for text in test_text:
+        test_X.append([word2vector(word) for word in cut_words(text)])
+
+    return train_X, test_X
 
 
 def get_stopwords(stopwords_filepath):
@@ -152,8 +181,88 @@ def read_document_from_text(text_filepath):
     return document
 
 
+def cut_words(document):
+    """
+    cut the document text and return its word list
+    :param document:
+    :return:
+    """
+    jieba.load_userdict(USER_DICT)
+    jieba.analyse.set_stop_words(STOPWORDS_FILE)
+    seg_list = jieba.cut(document, cut_all=True)
+    return '/'.join(seg_list).split('/')
+
+
+def train_word2vec():
+    """
+    train word2vec model
+    :return:
+    """
+
+    class MyCorpus(object):
+        def __init__(self):
+            pass
+
+        def __iter__(self):
+            for fname in os.listdir(TEXT_DIR):
+                text = read_document_from_text(os.path.join(TEXT_DIR, fname))
+                segmented_words = '/'.join(cut_words(''.join(text))).split('/')
+                yield segmented_words
+
+    sentences = MyCorpus()
+    model = gensim.models.Word2Vec(sentences, workers=8)
+
+    model.save(WORD2VEC_SAVE_PATH)
+
+
+def get_tfidf_top_words(documents):
+    """
+    calculate the top hot 30 keywords with TF-IDF value
+    :param documents:
+    :return:
+    """
+    jieba.load_userdict(USER_DICT)
+    jieba.analyse.set_stop_words(STOPWORDS_FILE)
+    hot_words = jieba.analyse.extract_tags(''.join(documents), topK=30, withWeight=True, allowPOS=(), withFlag=True)
+
+    return hot_words
+
+
+def word2vector(word):
+    model = Word2Vec.load(WORD2VEC_SAVE_PATH)
+
+    return model[word]
+
+
+def hotwords_to_vec_weighted_with_tfidf(hotword_list_with_tfidf):
+    for hotword, tfidf in hotword_list_with_tfidf.items():
+        word2vector(hotword) * tfidf
+        pass
+
+
+def hotwords_to_vec_weighted_without_tfidf(hotword_list):
+    """
+    sum up all word2vec vectors and calculate the mean as the text feature vector
+    :param hotword_list:
+    :return:
+    """
+    text_vec = []
+    for hotword in hotword_list:
+        text_vec += word2vector(hotword)
+
+    return text_vec / len(hotword_list)
+
+
 if __name__ == '__main__':
-    train_X, training_label, test_X, test_label = init_train_and_test_dataset(TEXT_DIR)
+    print('=' * 100)
+    print('start training word2vec...')
+    train_word2vec()
+    print('finish training word2vec...')
+    print('=' * 100)
+
+    training_text, training_label, test_text, test_label = split_corpus_6_4000_train_and_test_dataset(TEXT_DIR)
+    # train_X, test_X = get_corpus_6_4000_feature_veactor_in_tf_idf(training_text, test_text)
+    train_X, test_X = init_corpus_6_4000_in_word2vec(training_text, test_text)
 
     print('=' * 100)
     print('start launching MLP Classifier......')
@@ -173,6 +282,12 @@ if __name__ == '__main__':
     knn = NearestCentroid()
     knn.fit(train_X, training_label)
     print('finish launching KNN Classifier, the test accuracy is {:.5%}'.format(knn.score(test_X, test_label)))
+
+    print('=' * 100)
+    print('start launching Random Forest Classifier......')
+    rf = RandomForestClassifier(n_estimators=10)
+    rf.fit(train_X, training_label)
+    print('finish launching Random Forest Classifier, the test accuracy is {:.5%}'.format(rf.score(test_X, test_label)))
 
 """
     train_X, training_label, test_X, test_label = init_20groups_data(TEXT_DIR)
