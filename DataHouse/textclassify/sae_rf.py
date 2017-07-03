@@ -254,11 +254,12 @@ def hotwords_to_vec_weighted_without_tfidf(hotword_list):
 
 
 if __name__ == '__main__':
-    print('=' * 100)
-    print('start training word2vec...')
-    train_word2vec()
-    print('finish training word2vec...')
-    print('=' * 100)
+    if not os.path.exists(WORD2VEC_SAVE_PATH):
+        print('=' * 100)
+        print('start training word2vec...')
+        train_word2vec()
+        print('finish training word2vec...')
+        print('=' * 100)
 
     training_text, training_label, test_text, test_label = split_corpus_6_4000_train_and_test_dataset(TEXT_DIR)
     # train_X, test_X = get_corpus_6_4000_feature_veactor_in_tf_idf(training_text, test_text)
