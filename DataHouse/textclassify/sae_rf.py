@@ -12,8 +12,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn import tree
 from sklearn.neighbors.nearest_centroid import NearestCentroid
 
-TEXT_DIR = '/home/lucasx/Desktop/corpus_6_4000/'
-FEATURE_NUM = 300
+# TEXT_DIR = '/home/lucasx/Desktop/corpus_6_4000/'
+# TEXT_DIR = '/home/lucasx/Desktop/20_newsgroups/'
+TEXT_DIR = '/home/lucasx/Desktop/FudanNLPCorpus/'
+FEATURE_NUM = 20000
 STOPWORDS_FILE = 'stopwords.txt'
 USER_DICT = 'userdict.txt'
 
@@ -62,6 +64,34 @@ def init_train_and_test_dataset(dir_, category_list):
     return training_set, test_set
 
 
+def init_20groups_data(base_dir):
+    def get_labels():
+        label_and_num = {}
+        i = 0
+        for _ in os.listdir(base_dir):
+            label_and_num[_] = i
+            i += 1
+        return label_and_num
+
+    training_set = {}
+    training_label = []
+    test_set = {}
+    test_label = []
+    label_and_num = get_labels()
+    for _ in os.listdir(base_dir):
+        files_in_category = [os.path.join(base_dir, _, txt) for txt in os.listdir(os.path.join(base_dir, _))]
+        print(files_in_category)
+        training_set[_] = [read_document_from_text(textfilepath) for textfilepath in
+                           files_in_category[0: int(len(files_in_category) * 0.8)]]
+        training_label += [label_and_num[_] for i in range(int(len(files_in_category) * 0.8))]
+
+        test_set[_] = [read_document_from_text(_) for _ in
+                       files_in_category[int(len(files_in_category) * 0.8): len(files_in_category)]]
+        test_label += [label_and_num[_] for i in range(len(files_in_category) - int(len(files_in_category) * 0.8))]
+
+    return training_set, training_label, test_set, test_label
+
+
 def get_stopwords(stopwords_filepath):
     """
     read stopwords and return as a python list
@@ -105,6 +135,7 @@ def read_document_from_text(text_filepath):
 
 
 if __name__ == '__main__':
+    """
     category_list = get_all_categories(TEXT_DIR)
     training_set, test_set = init_train_and_test_dataset(TEXT_DIR, category_list)
 
@@ -141,3 +172,14 @@ if __name__ == '__main__':
     knn = NearestCentroid()
     knn.fit(train_X, training_label)
     print('finish launching KNN Classifier, the test accuracy is {:.5%}'.format(knn.score(test_X, test_label)))
+    """
+
+    training_set, training_label, test_set, test_label = init_20groups_data(TEXT_DIR)
+    train_X = documents_to_tfidf_vec(training_set)
+    test_X = documents_to_tfidf_vec(test_set)
+
+    print('=' * 100)
+    print('start launching MLP Classifier......')
+    mlp = MLPClassifier(solver='lbfgs', alpha=1e-4, hidden_layer_sizes=(50, 30, 20, 20), random_state=1)
+    mlp.fit(train_X, training_label)
+    print('finish launching MLP Classifier, the test accuracy is {:.5%}'.format(mlp.score(test_X, test_label)))
