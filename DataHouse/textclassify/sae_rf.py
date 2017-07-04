@@ -5,6 +5,7 @@ import csv
 import gensim
 import pandas as pd
 import numpy as np
+import nltk
 import jieba
 import jieba.analyse
 from gensim.models import Word2Vec
@@ -21,7 +22,7 @@ TEXT_DIR = '/home/lucasx/Desktop/corpus_6_4000/'
 TRAINING_CSV = '/home/lucasx/Desktop/ag_news_csv/train.csv'
 TEST_CSV = '/home/lucasx/Desktop/ag_news_csv/test.csv'
 # TEXT_DIR = '/home/lucasx/Desktop/FudanNLPCorpus/'
-FEATURE_NUM = 500
+FEATURE_NUM = 40
 STOPWORDS_FILE = 'stopwords.txt'
 USER_DICT = 'userdict.txt'
 WORD2VEC_SAVE_PATH = '/tmp/word2vector2.model'
@@ -217,7 +218,28 @@ def train_word2vec():
 
     sentences = MyCorpus()
     model = gensim.models.Word2Vec(sentences, workers=8)
+    model.save(WORD2VEC_SAVE_PATH)
 
+
+def train_english_word2vec(training_set, test_set):
+    """
+    train word2vec model with English words
+    :return:
+    """
+
+    class MyCorpus(object):
+        def __init__(self):
+            pass
+
+        def __iter__(self):
+            sens = nltk.sent_tokenize(''.join(training_set + test_set))
+            segmented_words = []
+            for sen in sens:
+                segmented_words += nltk.word_tokenize(sen)
+                yield segmented_words
+
+    sentences = MyCorpus()
+    model = gensim.models.Word2Vec(sentences, workers=8)
     model.save(WORD2VEC_SAVE_PATH)
 
 
@@ -265,6 +287,12 @@ def hotwords_to_vec_weighted_without_tfidf(hotword_list):
 
 
 def ag_news_dataset_init(training_csv, test_csv):
+    """
+    get train and test text data and return as list
+    :param training_csv:
+    :param test_csv:
+    :return:
+    """
     train_set = []
     train_label = []
     test_set = []
@@ -285,19 +313,34 @@ def ag_news_dataset_init(training_csv, test_csv):
     return train_set, train_label, test_set, test_label
 
 
+def cut_english_words(document):
+    sentences = nltk.sent_tokenize(document)
+    segmented_words = []
+    for sen in sentences:
+        segmented_words.append(nltk.word_tokenize(sen))
+
+    return segmented_words[0: FEATURE_NUM]
+
+
 if __name__ == '__main__':
     train_set, training_label, test_set, test_label = ag_news_dataset_init(TRAINING_CSV, TEST_CSV)
+    """
     vectorizer = TfidfVectorizer(analyzer='word', min_df=1, stop_words='english', max_features=FEATURE_NUM)
     train_X = vectorizer.fit_transform(train_set)
     test_X = vectorizer.fit_transform(test_set)
-
     """
+
     if not os.path.exists(WORD2VEC_SAVE_PATH):
         print('=' * 100)
         print('start training word2vec...')
-        train_word2vec()
+        train_english_word2vec(train_set, test_set)
         print('finish training word2vec...')
         print('=' * 100)
+
+    train_X = [hotwords_to_vec_weighted_without_tfidf(cut_english_words(_)) for _ in train_set]
+    test_X = [hotwords_to_vec_weighted_without_tfidf(cut_english_words(_)) for _ in test_set]
+
+    """
     training_text, training_label, test_text, test_label = split_corpus_6_4000_train_and_test_dataset(TEXT_DIR)
     # train_X, test_X = get_corpus_6_4000_feature_veactor_in_tf_idf(training_text, test_text)
     train_X, test_X = init_corpus_6_4000_in_word2vec(training_text, test_text)
