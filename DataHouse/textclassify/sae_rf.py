@@ -21,7 +21,7 @@ TEXT_DIR = '/home/lucasx/Desktop/corpus_6_4000/'
 TRAINING_CSV = '/home/lucasx/Desktop/ag_news_csv/train.csv'
 TEST_CSV = '/home/lucasx/Desktop/ag_news_csv/test.csv'
 # TEXT_DIR = '/home/lucasx/Desktop/FudanNLPCorpus/'
-FEATURE_NUM = 30
+FEATURE_NUM = 500
 STOPWORDS_FILE = 'stopwords.txt'
 USER_DICT = 'userdict.txt'
 WORD2VEC_SAVE_PATH = '/tmp/word2vector2.model'
@@ -287,8 +287,7 @@ def ag_news_dataset_init(training_csv, test_csv):
 
 if __name__ == '__main__':
     train_set, training_label, test_set, test_label = ag_news_dataset_init(TRAINING_CSV, TEST_CSV)
-    vectorizer = TfidfVectorizer(analyzer='word', ngram_range=(1, 6),
-                                 min_df=0, stop_words='english', sublinear_tf=True)
+    vectorizer = TfidfVectorizer(analyzer='word', min_df=1, stop_words='english', max_features=FEATURE_NUM)
     train_X = vectorizer.fit_transform(train_set)
     test_X = vectorizer.fit_transform(test_set)
 
@@ -304,11 +303,11 @@ if __name__ == '__main__':
     train_X, test_X = init_corpus_6_4000_in_word2vec(training_text, test_text)
     """
 
-    # print('=' * 100)
-    # print('start launching MLP Classifier......')
-    # mlp = MLPClassifier(solver='lbfgs', alpha=1e-4, hidden_layer_sizes=(50, 30, 20, 20), random_state=1)
-    # mlp.fit(train_X, training_label)
-    # print('finish launching MLP Classifier, the test accuracy is {:.5%}'.format(mlp.score(test_X, test_label)))
+    print('=' * 100)
+    print('start launching MLP Classifier......')
+    mlp = MLPClassifier(solver='lbfgs', alpha=1e-4, hidden_layer_sizes=(50, 30, 20, 20), random_state=1)
+    mlp.fit(train_X, training_label)
+    print('finish launching MLP Classifier, the test accuracy is {:.5%}'.format(mlp.score(test_X, test_label)))
 
     print('=' * 100)
     print('start launching Decision Tree Classifier......')
