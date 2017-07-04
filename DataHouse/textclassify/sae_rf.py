@@ -1,11 +1,16 @@
 import os
 import shutil
+import csv
 
 import gensim
+import pandas as pd
+import numpy as np
 import jieba
 import jieba.analyse
 from gensim.models import Word2Vec
 from sklearn.feature_extraction.text import TfidfTransformer, HashingVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from scipy.sparse.csr import csr_matrix
 from sklearn.pipeline import make_pipeline
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import RandomForestClassifier
@@ -13,9 +18,10 @@ from sklearn import tree
 from sklearn.neighbors.nearest_centroid import NearestCentroid
 
 TEXT_DIR = '/home/lucasx/Desktop/corpus_6_4000/'
-# TEXT_DIR = '/home/lucasx/Desktop/20_newsgroups/'
+TRAINING_CSV = '/home/lucasx/Desktop/ag_news_csv/train.csv'
+TEST_CSV = '/home/lucasx/Desktop/ag_news_csv/test.csv'
 # TEXT_DIR = '/home/lucasx/Desktop/FudanNLPCorpus/'
-FEATURE_NUM = 5000
+FEATURE_NUM = 30
 STOPWORDS_FILE = 'stopwords.txt'
 USER_DICT = 'userdict.txt'
 WORD2VEC_SAVE_PATH = '/tmp/word2vector2.model'
@@ -235,6 +241,11 @@ def word2vector(word):
 
 
 def hotwords_to_vec_weighted_with_tfidf(hotword_list_with_tfidf):
+    """
+    unfinished
+    :param hotword_list_with_tfidf:
+    :return:
+    """
     for hotword, tfidf in hotword_list_with_tfidf.items():
         word2vector(hotword) * tfidf
         pass
@@ -253,23 +264,51 @@ def hotwords_to_vec_weighted_without_tfidf(hotword_list):
     return text_vec / len(hotword_list)
 
 
+def ag_news_dataset_init(training_csv, test_csv):
+    train_set = []
+    train_label = []
+    test_set = []
+    test_label = []
+    with open(training_csv) as f:
+        f_csv = csv.reader(f)
+        # headers = next(f_csv)
+        for row in f_csv:
+            train_set.append(row[2])
+            train_label.append(row[0])
+    with open(test_csv) as f:
+        f_csv = csv.reader(f)
+        # headers = next(f_csv)
+        for row in f_csv:
+            test_set.append(row[2])
+            test_label.append(row[0])
+
+    return train_set, train_label, test_set, test_label
+
+
 if __name__ == '__main__':
+    train_set, training_label, test_set, test_label = ag_news_dataset_init(TRAINING_CSV, TEST_CSV)
+    vectorizer = TfidfVectorizer(analyzer='word', ngram_range=(1, 6),
+                                 min_df=0, stop_words='english', sublinear_tf=True)
+    train_X = vectorizer.fit_transform(train_set)
+    test_X = vectorizer.fit_transform(test_set)
+
+    """
     if not os.path.exists(WORD2VEC_SAVE_PATH):
         print('=' * 100)
         print('start training word2vec...')
         train_word2vec()
         print('finish training word2vec...')
         print('=' * 100)
-
     training_text, training_label, test_text, test_label = split_corpus_6_4000_train_and_test_dataset(TEXT_DIR)
     # train_X, test_X = get_corpus_6_4000_feature_veactor_in_tf_idf(training_text, test_text)
     train_X, test_X = init_corpus_6_4000_in_word2vec(training_text, test_text)
+    """
 
-    print('=' * 100)
-    print('start launching MLP Classifier......')
-    mlp = MLPClassifier(solver='lbfgs', alpha=1e-4, hidden_layer_sizes=(50, 30, 20, 20), random_state=1)
-    mlp.fit(train_X, training_label)
-    print('finish launching MLP Classifier, the test accuracy is {:.5%}'.format(mlp.score(test_X, test_label)))
+    # print('=' * 100)
+    # print('start launching MLP Classifier......')
+    # mlp = MLPClassifier(solver='lbfgs', alpha=1e-4, hidden_layer_sizes=(50, 30, 20, 20), random_state=1)
+    # mlp.fit(train_X, training_label)
+    # print('finish launching MLP Classifier, the test accuracy is {:.5%}'.format(mlp.score(test_X, test_label)))
 
     print('=' * 100)
     print('start launching Decision Tree Classifier......')
@@ -292,8 +331,6 @@ if __name__ == '__main__':
 
 """
     train_X, training_label, test_X, test_label = init_20groups_data(TEXT_DIR)
-    
-
     print('=' * 100)
     print('start launching MLP Classifier......')
     mlp = MLPClassifier(solver='lbfgs', alpha=1e-4, hidden_layer_sizes=(50, 30, 20, 20), random_state=1)
