@@ -6,6 +6,7 @@ import gensim
 import pandas as pd
 import numpy as np
 import nltk
+from nltk.tokenize import RegexpTokenizer
 import jieba
 import jieba.analyse
 from gensim.models import Word2Vec
@@ -15,6 +16,7 @@ from scipy.sparse.csr import csr_matrix
 from sklearn.pipeline import make_pipeline
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import RandomForestClassifier
+from sklearn import svm
 from sklearn import tree
 from sklearn.neighbors.nearest_centroid import NearestCentroid
 
@@ -314,22 +316,25 @@ def ag_news_dataset_init(training_csv, test_csv):
 
 
 def cut_english_words(document):
+    """
     sentences = nltk.sent_tokenize(document)
     segmented_words = []
     for sen in sentences:
         segmented_words.append(nltk.word_tokenize(sen))
 
     return segmented_words[0: FEATURE_NUM]
+    """
+    tokenizer = RegexpTokenizer(r'\w+')
+    return tokenizer.tokenize(document)
 
 
 if __name__ == '__main__':
     train_set, training_label, test_set, test_label = ag_news_dataset_init(TRAINING_CSV, TEST_CSV)
-    """
     vectorizer = TfidfVectorizer(analyzer='word', min_df=1, stop_words='english', max_features=FEATURE_NUM)
     train_X = vectorizer.fit_transform(train_set)
     test_X = vectorizer.fit_transform(test_set)
-    """
 
+    """
     if not os.path.exists(WORD2VEC_SAVE_PATH):
         print('=' * 100)
         print('start training word2vec...')
@@ -339,6 +344,7 @@ if __name__ == '__main__':
 
     train_X = [hotwords_to_vec_weighted_without_tfidf(cut_english_words(_)) for _ in train_set]
     test_X = [hotwords_to_vec_weighted_without_tfidf(cut_english_words(_)) for _ in test_set]
+    """
 
     """
     training_text, training_label, test_text, test_label = split_corpus_6_4000_train_and_test_dataset(TEXT_DIR)
@@ -351,6 +357,12 @@ if __name__ == '__main__':
     mlp = MLPClassifier(solver='lbfgs', alpha=1e-4, hidden_layer_sizes=(50, 30, 20, 20), random_state=1)
     mlp.fit(train_X, training_label)
     print('finish launching MLP Classifier, the test accuracy is {:.5%}'.format(mlp.score(test_X, test_label)))
+
+    print('=' * 100)
+    print('start launching SVM Classifier......')
+    svc = svm.SVC()
+    svc.fit(train_X, training_label)
+    print('finish launching SVM Classifier, the test accuracy is {:.5%}'.format(svc.score(test_X, test_label)))
 
     print('=' * 100)
     print('start launching Decision Tree Classifier......')

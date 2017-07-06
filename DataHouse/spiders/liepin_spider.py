@@ -50,7 +50,7 @@ class LiePinSpider(scrapy.Spider):
             salary = li.div.div.p['title'].split('_')[0].strip()
             location = li.div.div.p['title'].split('_')[1].strip()
             education = li.div.div.p['title'].split('_')[2].strip()
-            experience = li.div.div.p['title'].split('_')[2].strip()
+            experience = li.div.div.p['title'].split('_')[3].strip()
 
             publishTime = li.find(class_="time-info clearfix").time.get_text().strip()
             feedback = li.find(class_="time-info clearfix").span.get_text().strip()
