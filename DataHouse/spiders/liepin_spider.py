@@ -10,7 +10,7 @@ from DataHouse.items import LiePin
 
 liepin_job_list = []
 LIEPIN_JOB_DATA_DIR = './DataSet/liepin/'
-JOB_LIST = ['机器学习']
+JOB_LIST = ['数据挖掘']
 SLEEP_TIME = 3
 
 
@@ -29,7 +29,7 @@ class LiePinSpider(scrapy.Spider):
             os.removedirs(LIEPIN_JOB_DATA_DIR)
         os.makedirs(LIEPIN_JOB_DATA_DIR)
         urls = ['https://www.liepin.com/zhaopin/?fromSearchBtn=2&degradeFlag=0&init=-1&key=' +
-                urllib.parse.quote('机器学习') + '&curPage=%s' % str(i) for i in range(100)]
+                urllib.parse.quote('数据挖掘') + '&curPage=%s' % str(i) for i in range(100)]
         for url in urls:
             yield scrapy.Request(url=url, callback=self.parse, headers=self.headers)
 
@@ -101,4 +101,4 @@ class LiePinSpider(scrapy.Spider):
 
     def close(spider, reason):
         df = pd.DataFrame(liepin_job_list)
-        df.to_excel('./DataSet/liepin-ML.xlsx', sheet_name='JobInfo')
+        df.to_excel('./DataSet/liepin-DM.xlsx', sheet_name='JobInfo')

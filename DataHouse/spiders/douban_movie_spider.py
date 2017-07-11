@@ -1,3 +1,6 @@
+"""
+Douban Movie Web Spider powered by parsing HTML
+"""
 import datetime
 import os
 import urllib.parse
