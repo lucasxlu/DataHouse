@@ -1,15 +1,18 @@
-import glob
-import os
+# a classifier for music classification
 import csv
+import logging
+import os
+import shutil
 
-import pandas as pd
 import numpy as np
 import scipy
-from scipy.io import wavfile
 from matplotlib.pyplot import specgram
+from scipy.io import wavfile
+from sklearn.cluster import KMeans
 
+SONGS_DIR = '/home/lucasx/Documents/Dataset/music_speech/music_wav/'
+FFT_NPY_DIR = '/home/lucasx/Documents/Dataset/fft_npy/'
 
-SONGS_DIR= 'C:/CloudMusic/'
 
 def generate_data_and_label(songs_dir):
     """
@@ -36,15 +39,15 @@ def generate_data_and_label(songs_dir):
 
         writer.writeheader()
         for key, value in song_data.items():
-            writer.writerow({'songname': key, 'filename': key.replace(' ', ''), 'label': value})
-        print('Pre-processing done!!!')
+            writer.writerow({'songname': key.split('/')[-1], 'filename': key.replace(' ', ''), 'label': value})
+        print('CSV file Pre-processing done!!!')
 
 
 def create_fft(filename):
     sample_rate, X = wavfile.read(filename)
     fft_features = abs(scipy.fft(X)[0:1000])
     base_fn, ext = os.path.splitext(filename)
-    data_fn = base_fn + '.fft'
+    data_fn = FFT_NPY_DIR + base_fn.split('/')[-1] + '.fft'
     np.save(data_fn, fft_features)
 
     # draw the spec gram figure
@@ -52,21 +55,30 @@ def create_fft(filename):
     specgram(X, Fs=sample_rate, xextent=(0, 30))
 
 
-def read_fft(genre_list, base_dir):
+def batch_create_fft():
+    if os.path.exists(FFT_NPY_DIR):
+        shutil.rmtree(FFT_NPY_DIR)
+    os.makedirs(FFT_NPY_DIR)
+    for _ in os.listdir(SONGS_DIR):
+        create_fft(os.path.join(SONGS_DIR, _))
+    logging.log(logging.INFO, 'All music files have been processed successfully~~~')
+
+
+def read_fft(fft_npy_file_dir):
     X = []
     y = []
-    for label, genre in enumerate(genre_list):
-        genre_dir = os.path.join(base_dir, genre, '*.fft.npy')
-        file_list = glob.glob(genre_dir)
-        for fn in file_list:
-            fft_features = np.load(fn)
-            X.append(fft_features[:1000])
-            y.append(label)
+    for fft_npy_file in os.listdir(fft_npy_file_dir):
+        if fft_npy_file.endswith('.fft.npy'):
+            X.append(np.load(os.path.join(fft_npy_file_dir, fft_npy_file))[:1000])
+        else:
+            logging.error('unsupported format for file %s' % fft_npy_file)
 
     return np.array(X), np.array(y)
 
 
 if __name__ == '__main__':
     # generate_data_and_label(SONGS_DIR)
-    # create_fft("D:/1.wav")
-    read_fft([0, 1], base_dir='D:/')
+    # batch_create_fft()
+    X, y = read_fft(FFT_NPY_DIR)
+    kmeans_model = KMeans(n_clusters=8, random_state=1).fit(X)
+    labels = kmeans_model.labels_
