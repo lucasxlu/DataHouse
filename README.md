@@ -13,6 +13,7 @@
    * [fang.com](DataHouse/crawler/fang_crawler.py)
    * [Lian Jia](DataHouse/crawler/lianjia_crawler.py)
    * [LiePin](DataHouse/spiders/liepin_spider.py)
+   * [Music Toolbox](DataHouse/music)
     
 ## Prerequisite
    > Python version >= 3.4  
@@ -32,5 +33,5 @@
 
 
 ## Note
-   V1.2.0_r is released.
+   V1.6.1_r is released.
    More features are being developed and will be released soon~  

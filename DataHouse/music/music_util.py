@@ -1,4 +1,4 @@
-# a classifier for music classification
+# a toolbox for music songs similarity weighting, song clustering, and so on
 import csv
 import logging
 import os
@@ -10,8 +10,8 @@ from matplotlib.pyplot import specgram
 from scipy.io import wavfile
 from sklearn.cluster import KMeans
 
-SONGS_DIR = '/home/lucasx/Documents/Dataset/music_speech/music_wav/'
-FFT_NPY_DIR = '/home/lucasx/Documents/Dataset/fft_npy/'
+SONGS_DIR = '/home/lucasx/Documents/Dataset/CloudMusic/1'
+FFT_NPY_DIR = '/home/lucasx/Documents/Dataset/CloudMusic/fft_npy'
 
 
 def generate_data_and_label(songs_dir):
@@ -34,12 +34,12 @@ def generate_data_and_label(songs_dir):
                 song_data[_] = 0
 
     with open('dataset.csv', 'wt', encoding='UTF-8', newline='') as csvfile:
-        fieldnames = ['songname', 'filename', 'label']
+        fieldnames = ['songname', 'label']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
         writer.writeheader()
         for key, value in song_data.items():
-            writer.writerow({'songname': key.split('/')[-1], 'filename': key.replace(' ', ''), 'label': value})
+            writer.writerow({'songname': key.split('/')[-1], 'label': value})
         print('CSV file Pre-processing done!!!')
 
 
@@ -52,7 +52,7 @@ def create_fft(filename):
 
     # draw the spec gram figure
     print(sample_rate, X.shape)
-    specgram(X, Fs=sample_rate, xextent=(0, 30))
+    # specgram(X, Fs=sample_rate, xextent=(0, 30))
 
 
 def batch_create_fft():
@@ -68,6 +68,7 @@ def read_fft(fft_npy_file_dir):
     X = []
     y = []
     for fft_npy_file in os.listdir(fft_npy_file_dir):
+        y.append(1)
         if fft_npy_file.endswith('.fft.npy'):
             X.append(np.load(os.path.join(fft_npy_file_dir, fft_npy_file))[:1000])
         else:
@@ -76,9 +77,18 @@ def read_fft(fft_npy_file_dir):
     return np.array(X), np.array(y)
 
 
+def batch_rename(dir_):
+    num = 1
+    for _ in os.listdir(dir_):
+        os.rename(os.path.join(dir_, _), os.path.join(dir_, '%d.mp3' % num))
+        num += 1
+    print('All mp3 files have been renamed...')
+
+
 if __name__ == '__main__':
     # generate_data_and_label(SONGS_DIR)
     # batch_create_fft()
     X, y = read_fft(FFT_NPY_DIR)
     kmeans_model = KMeans(n_clusters=8, random_state=1).fit(X)
     labels = kmeans_model.labels_
+    print(labels)
