@@ -9,7 +9,7 @@
    * [JobCn](DataHouse/jobcn)
    * [Douban Book](DataHouse/spiders/douban_book_spider.py)
    * [Douban Movie](DataHouse/spiders/douban_movie_spider.py)
-   * [Anjuku](DataHouse/spiders/anjuke_spider.py)
+   * [Anjuke](DataHouse/spiders/anjuke_spider.py)
    * [fang.com](DataHouse/crawler/fang_crawler.py)
    * [Lian Jia](DataHouse/crawler/lianjia_crawler.py)
    * [LiePin](DataHouse/spiders/liepin_spider.py)
@@ -33,5 +33,5 @@
 
 
 ## Note
-   V1.6.1_r is released.
+   V1.6.2_ALPHA is released.
    More features are being developed and will be released soon~  

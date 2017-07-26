@@ -1,20 +1,18 @@
 """
 Titanic survive prediction
 """
-from sklearn.feature_selection import VarianceThreshold
-from sklearn.feature_selection import SelectKBest
-from sklearn.feature_selection import chi2
-from sklearn.neural_network import MLPClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn import svm
-from sklearn.neighbors.nearest_centroid import NearestCentroid
-from sklearn import tree
-import pandas as pd
 import numpy as np
+import pandas as pd
+from sklearn import svm
+from sklearn import tree
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_selection import VarianceThreshold
+from sklearn.neighbors.nearest_centroid import NearestCentroid
+from sklearn.neural_network import MLPClassifier
 
 TRAIN_CSV = '/home/lucasx/Documents/Kaggle/Data/train.csv'
 TEST_CSV = '/home/lucasx/Documents/Kaggle/Data/test.csv'
-GROUND_TRUTH = '/home/lucasx/Documents/Kaggle/Data/gender_submission.csv'
+SUBMISSION = '/home/lucasx/Documents/Kaggle/Data/gender_submission.csv'
 
 
 def load_training_set(csv_filepath):
@@ -43,6 +41,14 @@ def load_training_set(csv_filepath):
     return X.fillna(value=np.mean(df['Age'])).T, y
 
 
+def normalize(arr):
+    m, n = arr.shape
+    for i in range(n):
+        arr[i] = (arr[i] - np.min(arr[i])) / (np.max(arr[i]) - np.min(arr[i]))
+
+    return arr
+
+
 def load_test_data(csv_filepath):
     df = pd.read_csv(csv_filepath)
     sex_num = []
@@ -68,16 +74,12 @@ def load_test_data(csv_filepath):
 if __name__ == '__main__':
     percentage = 0.9
     X_train, y_train = load_training_set(TRAIN_CSV)
-    X_train, y_train = X_train[0: int(len(X_train) * percentage)], y_train[0: int(len(y_train) * percentage)]
-    X_val, y_val = X_train[int(len(X_train) * percentage): len(X_train)], y_train[
-                                                                          int(len(y_train) * percentage): len(y_train)]
+    X_train, y_train = normalize(X_train[0: int(len(X_train) * percentage)]), y_train[0: int(len(y_train) * percentage)]
+    X_val, y_val = normalize(X_train[int(len(X_train) * percentage): len(X_train)]), \
+                   y_train[int(len(y_train) * percentage): len(y_train)]
     print('loading data successfully~')
     print('=' * 100)
-    X_test = load_test_data(TEST_CSV)
-    y_test = pd.read_csv(GROUND_TRUTH)['Survived']
-
-    sel = VarianceThreshold(threshold=(.7 * (1 - .7)))
-    X_train = sel.fit_transform(X_train)
+    X_test = normalize(load_test_data(TEST_CSV))
 
     print('start launching Random Forest Classifier......')
     rf = RandomForestClassifier(n_estimators=10)
@@ -113,5 +115,5 @@ if __name__ == '__main__':
     print('finish launching MLP Classifier, the test accuracy is {:.5%}'.format(mlp.score(X_val, y_val)))
     mlp_predict = mlp.predict(X_test)
 
-    dataframe = pd.DataFrame(pd.read_csv(TEST_CSV)['PassengerId'].tolist(), dtree_predict)
-    dataframe.to_csv('~/gender_submission.csv')
+    dataframe = pd.DataFrame(np.array([pd.read_csv(TEST_CSV)['PassengerId'].tolist(), dtree_predict[:, ].tolist()]).T)
+    dataframe.to_csv(SUBMISSION, header=['PassengerId', 'Survived'], index=False)
