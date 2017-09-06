@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<typelist>
+    <!-- <type id="10">美食</type> -->
+    <!--<type id="15">K歌</type>-->
+    <!--<type id="20">购物</type>-->
+    <!--<type id="25">电影</type>-->
+    <!--<type id="30">休闲娱乐</type>-->
+    <!--<type id="35">景点</type>-->
+    <!--<type id="45">运动健身</type>-->
+    <!--<type id="50">丽人</type>-->
+    <type id="60">酒店</type>
+    <!--<type id="65">爱车</type>-->
+    <!--<type id="75">教育培训</type>-->
+    <!--<type id="80">生活服务</type>-->
+    <!--<type id="85">医疗健康</type>-->
+    <!--<type id="95">宠物</type>-->
+</typelist>
