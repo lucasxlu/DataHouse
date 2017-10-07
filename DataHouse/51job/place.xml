@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<places>
+    <place value="030000">广东</place>
+    <place value="070000">江苏</place>
+    <place value="080000">浙江</place>
+    <place value="090000">四川</place>
+    <place value="100000">海南</place>
+    <place value="110000">福建</place>
+    <place value="120000">山东</place>
+    <place value="130000">江西</place>
+    <place value="140000">广西</place>
+    <place value="150000">安徽</place>
+    <place value="160000">河北</place>
+    <place value="170000">河南</place>
+    <place value="180000">湖北</place>
+    <place value="190000">湖南</place>
+    <place value="200000">陕西</place>
+    <place value="210000">山西</place>
+    <place value="220000">黑龙江</place>
+    <place value="230000">辽宁</place>
+    <place value="240000">吉林</place>
+    <place value="250000">云南</place>
+    <place value="260000">贵州</place>
+    <place value="270000">甘肃</place>
+    <place value="280000">内蒙古</place>
+    <place value="290000">宁夏</place>
+    <place value="300000">西藏</place>
+    <place value="310000">新疆</place>
+    <place value="320000">青海</place>
+    <place value="330000">香港</place>
+    <place value="340000">澳门</place>
+    <place value="350000">台湾</place>
+    <place value="360000">国外</place>
+</places>
