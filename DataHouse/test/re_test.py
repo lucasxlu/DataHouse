@@ -35,4 +35,18 @@ def get_max_pagenum(tag):
 
 
 if __name__ == '__main__':
-    get_max_pagenum('爱情')
+    # get_max_pagenum('爱情')
+    avg_salary = []
+    with open("C:\\Users\\LucasX\\Desktop\\salary.txt", mode='rt', encoding='utf-8') as f:
+        for line in f.readlines():
+            if line.strip() == '面议':
+                avg_salary.append(None)
+            elif '-' in line:
+                min = float(line.strip().split('-')[0])
+                max = float(line.replace('万', '').strip().split('-')[1])
+                avg_salary.append((min + max) / 2)
+            else:
+                avg_salary.append(line)
+
+    for _ in avg_salary:
+        print(_)

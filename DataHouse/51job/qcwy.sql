@@ -1,16 +1,16 @@
 /*
 Navicat MySQL Data Transfer
 
-Source Server         : localhost_3306
-Source Server Version : 50528
+Source Server         : cvlh
+Source Server Version : 50714
 Source Host           : localhost:3306
 Source Database       : qcwy
 
 Target Server Type    : MYSQL
-Target Server Version : 50528
+Target Server Version : 50714
 File Encoding         : 65001
 
-Date: 2017-10-08 15:46:37
+Date: 2017-10-08 17:30:25
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -43,3 +43,24 @@ CREATE TABLE `dict` (
   `key` varchar(255) DEFAULT NULL,
   `value` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+-- Table structure for unit_convert
+-- ----------------------------
+DROP TABLE IF EXISTS `unit_convert`;
+CREATE TABLE `unit_convert` (
+  `unit` varchar(255) DEFAULT NULL,
+  `ratio` int(10) DEFAULT NULL,
+  `model` int(10) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+-- Function structure for filter_num
+-- ----------------------------
+DROP FUNCTION IF EXISTS `filter_num`;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` FUNCTION `filter_num`(str varchar(100)) RETURNS varchar(100) CHARSET utf8
+    READS SQL DATA
+return REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(str,'0',''),'1',''),'2',''),'3',''),'4',''),'5',''),'6',''),'7',''),'8',''),'9',''),'.',''),'-','')
+;;
+DELIMITER ;
