@@ -14,6 +14,8 @@
    * [Lian Jia](DataHouse/crawler/lianjia_crawler.py)
    * [LiePin](DataHouse/spiders/liepin_spider.py)
    * [Music Toolbox](DataHouse/music)
+   * [51 Job](DataHouse/51job)
+   * [Zhihu Live](DataHouse/zhihu)
     
 ## Prerequisite
    > Python version >= 3.4  

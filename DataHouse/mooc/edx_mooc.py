@@ -1,6 +1,6 @@
 import pandas as pd
 
-MOOC_CSV_DATA = '/home/lucasx/Documents/Dataset/HMXPC13_DI_v2_5-14-14.csv'
+MOOC_CSV_DATA = 'E:/DataSet/MOOC/HMXPC13_DI_v2_5-14-14.csv'
 
 
 def data_pre_processing():
