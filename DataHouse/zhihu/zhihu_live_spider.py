@@ -59,7 +59,7 @@ def recursive_crawl():
     while True:
         try:
             obj = crawl(offset)
-            if obj is not None and obj['paging']['is_end'] == False:
+            if obj is not None and len(obj['data']) > 0:
                 for _ in obj['data']:
                     insert_item(_)
                     print('insert one item successfully~')
