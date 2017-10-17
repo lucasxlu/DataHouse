@@ -58,6 +58,50 @@ def crawl_zhihu_user(user_id='xulu-0620'):
         print('Error ! error code is %d' % response.status_code)
 
 
+def crawl_zhihu_followers(zhihu_user_id='xulu-0620'):
+    """
+    crawl all followers belong to the particular Zhihu user
+    :param zhihu_user_id:
+    :return:
+    """
+    page_no = 1
+    totals = 20  # just for temp use
+
+    url = 'https://www.zhihu.com/api/v4/members/%s/followers' % zhihu_user_id
+    headers = {
+        'accept': 'application/json, text/plain, */*',
+        'authorization': 'Bearer Mi4xaTZ0UkFBQUFBQUFBVU1KWlMtYjlDeGNBQUFCaEFsVk5zMUFOV2dBVHk5U2h1S1FVN1R6OUFweVYwV21HWm5Fa1dn|1508230067|a16ee938a86d2a004193803aa5390bb287bfd3e5',
+        'Host': 'www.zhihu.com',
+        'Connection': 'keep-alive',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36',
+        'Referer': 'https://www.zhihu.com',
+        'x-udid': 'AFDCWUvm_QuPTrodoMiYXMbKPb92g2-ihUs=',
+    }
+
+    while page_no * 20 <= totals:
+        payload = {
+            'include': 'data[*].answer_count,articles_count,gender,follower_count,is_followed,is_following,badge[?(type=best_answerer)].topics',
+            'offset': str(page_no * 20),
+            'limit': '20'
+        }
+
+        cookies = dict(
+            cookies_are='')
+
+        response = requests.get(url, headers=headers, cookies=cookies, params=payload)
+        print('crawling url : ' + response.url)
+        if response.status_code == 200:
+            json_obj = response.json()
+            totals = json_obj['paging']['totals']
+            for _ in json_obj['data']:
+                _['host'] = zhihu_user_id
+                insert_item(_)
+                print('insert one item successfully~')
+            page_no += 1
+        else:
+            print('Error ! error code is %d' % response.status_code)
+
+
 def insert_item(item):
     """
     insert an item into MongoDB
@@ -66,10 +110,11 @@ def insert_item(item):
     :Version:1.0
     """
     client = MongoClient()
-    db = client.zhihu.user
+    db = client.zhihu.followers
 
     result = db.insert_one(item)
 
 
 if __name__ == '__main__':
-    crawl_zhihu_user()
+    # crawl_zhihu_user()
+    crawl_zhihu_followers()
