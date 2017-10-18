@@ -40,7 +40,7 @@ def crawl(keyword):
         }
 
         cookies = dict(
-            cookies_are='JSESSIONID=4918C986D1F0BAEA3A779785798EB25A; _people_ip_new_code=430000; wdcid=03287bf60e25971a; sso_c=0; sfr=1')
+            cookies_are='')
 
         response = requests.post(url, data=payload, headers=headers, cookies=cookies, stream=True, timeout=20)
         if response.status_code == 200:
