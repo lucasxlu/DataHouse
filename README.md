@@ -15,7 +15,7 @@
    * [LiePin](DataHouse/spiders/liepin_spider.py)
    * [Music Toolbox](DataHouse/music)
    * [51 Job](DataHouse/51job)
-   * [Zhihu Live](DataHouse/zhihu)
+   * [Zhihu](DataHouse/zhihu)
     
 ## Prerequisite
    > Python version >= 3.4  
