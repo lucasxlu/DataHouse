@@ -2,10 +2,11 @@
 a text mining script for The 19th National Congress of CPC Report
 """
 
-import requests
-from bs4 import BeautifulSoup
 import jieba
 import jieba.analyse
+import requests
+from bs4 import BeautifulSoup
+from polyglot.text import Text
 
 STOPWORDS = './stopwords_renmin_nccpc_report.txt'
 USERDICT = './userdict_renmin_nccpc_report.txt'
@@ -55,7 +56,13 @@ def crawl_report():
     return report_list
 
 
-def analysis(list_):
+def analysis_hotwords(list_):
+    """
+    calculate hot words by TF-IDF algorithm
+    :param list_:
+    :return:
+    :Version:1.0
+    """
     content_list = [_.content for _ in list_]
 
     hot_words = jieba.analyse.extract_tags(''.join(content_list), topK=100, withWeight=True, allowPOS=())
@@ -64,6 +71,19 @@ def analysis(list_):
         print(_[0] + '\t' + str(_[1]))
 
 
+def analysis_ner(list_):
+    """
+    extract named entity
+    :param list_:
+    :return:
+    :Version:1.0
+    """
+    content_list = [_.content for _ in list_]
+    text = Text(''.join(content_list))
+    for entity in text.entities:
+        print(entity.tag, entity)
+
+
 if __name__ == '__main__':
     report_list = crawl_report()
-    analysis(report_list)
+    analysis_ner(report_list)
