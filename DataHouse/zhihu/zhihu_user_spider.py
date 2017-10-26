@@ -2,6 +2,8 @@
 a web spider for Zhihu user's information
 """
 import json
+import random
+import time
 
 import requests
 from bs4 import BeautifulSoup
@@ -29,15 +31,12 @@ def crawl_zhihu_user(user_id='xulu-0620'):
         soup = BeautifulSoup(response.text, 'html5lib')
         json_obj = json.loads(soup.find(id="data")['data-state'])
         person_obj = json_obj['entities']['users'][user_id]
-        zhihu_user['educations'] = person_obj['educations']  # 教育经历
-        zhihu_user['employments'] = person_obj['employments']  # 工作经历
-        zhihu_user['locations'] = person_obj['locations']  # 地址
+        zhihu_user['userId'] = user_id  # 用户ID
+        zhihu_user['followerCount'] = person_obj['followerCount']  # 粉丝数量
         zhihu_user['userType'] = person_obj['userType']  # 用户类型
         zhihu_user['followingCount'] = person_obj['followingCount']  # 关注人数
         zhihu_user['followingTopicCount'] = person_obj['followingTopicCount']  # 关注话题数量
-        zhihu_user['business'] = person_obj['business']  # 行业
         zhihu_user['hostedLiveCount'] = person_obj['hostedLiveCount']  # 举办Live数量
-        zhihu_user['followerCount'] = person_obj['followerCount']  # 粉丝数量
         zhihu_user['favoritedCount'] = person_obj['favoritedCount']  # 答案被收藏数量
         zhihu_user['voteupCount'] = person_obj['voteupCount']  # 答案被点赞数量
         zhihu_user['answerCount'] = person_obj['answerCount']  # 回答数量
@@ -47,12 +46,20 @@ def crawl_zhihu_user(user_id='xulu-0620'):
         zhihu_user['columnsCount'] = person_obj['columnsCount']  # 专栏数量
         zhihu_user['favoriteCount'] = person_obj['favoriteCount']  # 收藏数量
         zhihu_user['markedAnswersCount'] = person_obj['markedAnswersCount']  # 编辑收录答案数量
-        zhihu_user['gender'] = person_obj['gender']  # 性别
-        zhihu_user['badge'] = person_obj['badge']  # 话题优秀回答者
-        zhihu_user['name'] = person_obj['name']  # 话题优秀回答者
+        try:
+            zhihu_user['educations'] = person_obj['educations']  # 教育经历
+            zhihu_user['employments'] = person_obj['employments']  # 工作经历
+            zhihu_user['locations'] = person_obj['locations']  # 地址
+            zhihu_user['business'] = person_obj['business']  # 行业
+            zhihu_user['gender'] = person_obj['gender']  # 性别
+            zhihu_user['badge'] = person_obj['badge']  # 话题优秀回答者
+            zhihu_user['name'] = person_obj['name']  # 话题优秀回答者
 
+        except:
+            pass
         print(zhihu_user)
         insert_item(zhihu_user)
+        # time.sleep(random.randint(2, 5))  # a range between 2s and 5s
 
     else:
         print('Error ! error code is %d' % response.status_code)
@@ -110,11 +117,31 @@ def insert_item(item):
     :Version:1.0
     """
     client = MongoClient()
-    db = client.zhihu.followers
+    db = client.zhihu.users
 
     result = db.insert_one(item)
 
 
+def query_and_crawl_zhihuer_from_mongo():
+    """
+    query zhihu users from mongodb and crawl the detailed info of them
+    :return:
+    :Version:1.0
+    """
+    client = MongoClient()
+    db = client.zhihu.live
+    lives = db.find()
+    visited_zhihu_user = []
+    for live in lives:
+        zhihu_user = live['speaker']['member']['url_token']
+        if zhihu_user not in visited_zhihu_user:
+            print('start crawling %s' % zhihu_user)
+            try:
+                crawl_zhihu_user(zhihu_user)
+            except:
+                pass
+            visited_zhihu_user.append(zhihu_user)
+
+
 if __name__ == '__main__':
-    # crawl_zhihu_user()
-    crawl_zhihu_followers()
+    query_and_crawl_zhihuer_from_mongo()

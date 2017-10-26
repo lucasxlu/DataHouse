@@ -23,16 +23,14 @@ def crawl(pagenum):
     :return:
     :Version:1.0
     """
-    url_pattern = 'https://api.zhihu.com/lives/homefeed?limit=10&offset=%d&includes=live' % pagenum
+    url_pattern = 'https://api.zhihu.com/lives?limit=10&offset=%d&includes=live' % pagenum
     headers = {
-        'accept': 'application/json, text/plain, */*',
-        'Accept-Language': 'zh-CN,zh;q=0.8',
-        'Connection': 'keep-alive',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+        'Accept-Encoding': 'gzip, deflate, br',
         'Host': 'api.zhihu.com',
-        'Origin': 'https://www.zhihu.com',
-        'Referer': 'https://www.zhihu.com/lives/',
+        'Upgrade-Insecure-Requests': '1',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36',
-        'X-Api-Version': '3.0.63'
     }
     cookies = dict(
         cookies_are='')
@@ -67,7 +65,7 @@ def recursive_crawl():
             else:
                 break
         except:
-            logging.error('https://api.zhihu.com/lives/homefeed?limit=10&offset=%d&includes=live' % offset)
+            logging.error('https://api.zhihu.com/lives?limit=10&offset=%d&includes=live' % offset)
 
 
 def insert_item(item):
