@@ -8,6 +8,7 @@ import logging
 
 import requests
 from pymongo import MongoClient
+import pandas as pd
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
@@ -81,5 +82,55 @@ def insert_item(item):
     result = db.insert_one(item)
 
 
+def output_fields_from_mongo():
+    """
+    extract simpler info zhihu live's info from mongodb and output to XLSX file
+    :return:
+    :Version:1.0
+    """
+    client = MongoClient()
+    db = client.zhihu.live
+    lives = db.find({"status": "ended"})
+
+    live_info = []
+
+    for live in lives:
+        subject = live['subject']  # Live名称
+        name = live['speaker']['member']['name']  # 主讲人
+        attachment_count = live['attachment_count']  # 文件数量
+        speaker_audio_message_count = live['speaker_audio_message_count']
+        duration = live['duration'] / 60
+        original_price = live['fee']['original_price']  # Live单价
+        in_promotion = live['in_promotion']  # 是否促销
+        has_authenticated = 1 if live['has_authenticated'] == "true" else 0  # 主讲人是否实名认证
+        user_type = live['speaker']['member']['user_type']  # 用户类型
+        headline = live['speaker']['member']['headline']  # 主讲人个性签名
+        gender = live['speaker']['member']['gender']  # 主讲人性别
+        speaker_message_count = live['speaker_message_count']
+        tags = '|'.join([tag['name'] for tag in live['tags']])
+        tag_id = '|'.join([str(tag['id']) for tag in live['tags']])
+        liked_num = live['liked_num']
+        review_count = live['review']['count']  # Live评价数量
+        review_score = live['review']['score']  # Live 评分
+        reply_message_count = live['reply_message_count']  # 问答数量
+        seats_taken = live['seats']['taken']  # 参与人数
+        seats_max = live['seats']['max']  # 最多人数
+
+        cols = ['subject', 'name', 'attachment_count', 'speaker_audio_message_count', 'duration',
+                'original_price', 'in_promotion', 'has_authenticated', 'user_type', 'headline', 'gender',
+                'speaker_message_count', 'tags', 'tag_id', 'liked_num', 'review_count', 'review_score',
+                'reply_message_count', 'seats_taken', 'seats_max']
+
+        live_info.append([subject, name, attachment_count, speaker_audio_message_count, duration,
+                          original_price, in_promotion, has_authenticated, user_type, headline, gender,
+                          speaker_message_count, tags, tag_id, liked_num, review_count, review_score,
+                          reply_message_count, seats_taken, seats_max])
+
+    df = pd.DataFrame(live_info, columns=cols)
+    df.to_excel(excel_writer='D:/ZhihuLive.xlsx', sheet_name='ZhihuLive', index=False)
+    logging.info('Excel file has been generated...')
+
+
 if __name__ == '__main__':
-    recursive_crawl()
+    # recursive_crawl()
+    output_fields_from_mongo()
