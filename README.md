@@ -31,7 +31,9 @@
 
 
 ## Report
-   The report of house price prediction has been released on [Zhihu](https://zhuanlan.zhihu.com/p/26949876) with my presentation [here](/Presentation/House_ML.pptx). 
+   * [House Price Prediction](https://zhuanlan.zhihu.com/p/26949876); [Presentation](/Presentation/House_ML.pptx).
+   * [Zhihu Live Analysis](https://zhuanlan.zhihu.com/p/30514792)
+   * [City Analysis](https://zhuanlan.zhihu.com/p/28954770)
 
 
 ## Note
