@@ -53,6 +53,26 @@ CREATE TABLE `unit_convert` (
   `ratio` int(10) DEFAULT NULL,
   `model` int(10) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+-- ----------------------------
+-- Records of unit_convert
+-- ----------------------------
+INSERT INTO `unit_convert` VALUES ('+ 万/年', '10000', '13', '以上');
+INSERT INTO `unit_convert` VALUES ('+ 万/月', '10000', '1', '以上');
+INSERT INTO `unit_convert` VALUES ('+ 千/月', '1000', '1', '以上');
+INSERT INTO `unit_convert` VALUES ('+/月', '1', '1', '以上');
+INSERT INTO `unit_convert` VALUES ('万/年', '10000', '13', null);
+INSERT INTO `unit_convert` VALUES ('万/月', '10000', '1', null);
+INSERT INTO `unit_convert` VALUES ('万以上/年', '10000', '13', '以上');
+INSERT INTO `unit_convert` VALUES ('万以上/月', '10000', '1', '以上');
+INSERT INTO `unit_convert` VALUES ('万以下/年', '10000', '13', '以下');
+INSERT INTO `unit_convert` VALUES ('元/天', '22', '1', null);
+INSERT INTO `unit_convert` VALUES ('元/小时', '176', '1', null);
+INSERT INTO `unit_convert` VALUES ('千/年', '1000', '13', null);
+INSERT INTO `unit_convert` VALUES ('千/月', '1000', '1', null);
+INSERT INTO `unit_convert` VALUES ('千以下/年', '1000', '13', '以下');
+INSERT INTO `unit_convert` VALUES ('千以下/月', '1000', '1', '以下');
+
+
 
 -- ----------------------------
 -- Function structure for filter_num
