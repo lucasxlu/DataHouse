@@ -132,5 +132,5 @@ def output_fields_from_mongo():
 
 
 if __name__ == '__main__':
-    # recursive_crawl()
-    output_fields_from_mongo()
+    recursive_crawl()
+    # output_fields_from_mongo()

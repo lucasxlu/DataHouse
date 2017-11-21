@@ -13,12 +13,12 @@ import pandas as pd
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
                     datefmt='%a, %d %b %Y %H:%M:%S',
-                    filename='zhihu_course.log',
+                    filename='zhihu_special.log',
                     filemode='w')
 
 
 def crawl(pagenum):
-    url_pattern = 'https://api.zhihu.com/lives/special_lists?limit=%d&offset=10&subtype=special_list' % pagenum
+    url_pattern = 'https://api.zhihu.com/lives/special_lists?limit=10&offset=%d&subtype=special_list' % pagenum
     headers = {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
         'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
@@ -48,15 +48,14 @@ def recursive_crawl():
     :return:
     "Version:1.0
     """
-    offset = 10
+    offset = 0
     while True:
         try:
             obj = crawl(offset)
             if obj is not None and len(obj['data']) > 0:
                 for _ in obj['data']:
-                    if _ is not None:
-                        insert_item(_)
-                        print('insert one item successfully~')
+                    insert_item(_)
+                    print('insert one item successfully~')
                 offset += 10
             else:
                 break

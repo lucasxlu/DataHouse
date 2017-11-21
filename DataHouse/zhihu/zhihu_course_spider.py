@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.DEBUG,
 
 
 def crawl(pagenum):
-    url_pattern = 'https://api.zhihu.com/lives?limit=10&offset=%d&subtype=course' % pagenum
+    url_pattern = 'https://api.zhihu.com/lives/special_lists?limit=10&offset=%d&subtype=course' % pagenum
     headers = {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
         'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
@@ -48,7 +48,7 @@ def recursive_crawl():
     :return:
     "Version:1.0
     """
-    offset = 10
+    offset = 0
     while True:
         try:
             obj = crawl(offset)
@@ -60,7 +60,7 @@ def recursive_crawl():
             else:
                 break
         except:
-            logging.error('https://api.zhihu.com/lives?limit=10&offset=%d&subtype=course' % offset)
+            logging.error('https://api.zhihu.com/lives/special_lists?limit=10&offset=%d&subtype=course' % offset)
 
 
 def insert_item(item):
