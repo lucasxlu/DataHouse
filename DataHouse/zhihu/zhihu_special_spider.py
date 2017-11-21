@@ -54,8 +54,9 @@ def recursive_crawl():
             obj = crawl(offset)
             if obj is not None and len(obj['data']) > 0:
                 for _ in obj['data']:
-                    insert_item(_)
-                    print('insert one item successfully~')
+                    if _ is not None:
+                        insert_item(_)
+                        print('insert one item successfully~')
                 offset += 10
             else:
                 break
