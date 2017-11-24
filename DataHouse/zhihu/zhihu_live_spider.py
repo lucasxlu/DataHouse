@@ -54,7 +54,7 @@ def recursive_crawl():
     :return:
     "Version:1.0
     """
-    offset = 10
+    offset = 0
     while True:
         try:
             obj = crawl(offset)
@@ -90,47 +90,59 @@ def output_fields_from_mongo():
     """
     client = MongoClient()
     db = client.zhihu.live
-    lives = db.find({"status": "ended"})
+    lives = db.find({"status": "ended", "review.count": {"$gt": 50}})
 
     live_info = []
 
     for live in lives:
-        subject = live['subject']  # Live名称
-        name = live['speaker']['member']['name']  # 主讲人
-        attachment_count = live['attachment_count']  # 文件数量
+        id = live['id']
+        in_promotion = int(live['in_promotion'])
+        duration = live['duration']
+        reply_message_count = live['reply_message_count']
+        source = 1 if live['source'] == 'admin' else 0
+        purchasable = int(live['purchasable'])
+        is_refundable = int(live['is_refundable'])
+        has_authenticated = int(live['has_authenticated'])
+        user_type = 0 if live['speaker']['member']['user_type'] == 'organization' else 1
+        gender = live['speaker']['member']['gender']
+        badge = len(live['speaker']['member']['badge'])
+        tags = live['tags']
+        tag_id = tags[0]['id'] if len(tags) > 0 else None
+        tag_name = tags[0]['name'] if len(tags) > 0 else ''
         speaker_audio_message_count = live['speaker_audio_message_count']
-        duration = live['duration'] / 60
-        original_price = live['fee']['original_price']  # Live单价
-        in_promotion = live['in_promotion']  # 是否促销
-        has_authenticated = 1 if live['has_authenticated'] == "true" else 0  # 主讲人是否实名认证
-        user_type = live['speaker']['member']['user_type']  # 用户类型
-        headline = live['speaker']['member']['headline']  # 主讲人个性签名
-        gender = live['speaker']['member']['gender']  # 主讲人性别
-        speaker_message_count = live['speaker_message_count']
-        tags = '|'.join([tag['name'] for tag in live['tags']])
-        tag_id = '|'.join([str(tag['id']) for tag in live['tags']])
+        attachment_count = live['attachment_count']
         liked_num = live['liked_num']
-        review_count = live['review']['count']  # Live评价数量
-        review_score = live['review']['score']  # Live 评分
-        reply_message_count = live['reply_message_count']  # 问答数量
-        seats_taken = live['seats']['taken']  # 参与人数
-        seats_max = live['seats']['max']  # 最多人数
+        is_commercial = int(live['is_commercial'])
+        audition_message_count = live['audition_message_count']
+        is_audition_open = int(live['is_audition_open'])
+        seats_taken = live['seats']['taken']
+        seats_max = live['seats']['max']
+        speaker_message_count = live['speaker_message_count']
+        amount = live['fee']['amount']
+        original_price = live['fee']['original_price']
+        buyable = int(live['buyable'])
+        has_audition = int(live['has_audition'])
+        has_feedback = int(live['has_feedback'])
+        is_public = live['is_public']
+        feedback_score = live['feedback_score']
 
-        cols = ['subject', 'name', 'attachment_count', 'speaker_audio_message_count', 'duration',
-                'original_price', 'in_promotion', 'has_authenticated', 'user_type', 'headline', 'gender',
-                'speaker_message_count', 'tags', 'tag_id', 'liked_num', 'review_count', 'review_score',
-                'reply_message_count', 'seats_taken', 'seats_max']
+        live_info.append(
+            [id, in_promotion, duration, reply_message_count, source, purchasable, is_refundable, has_authenticated,
+             user_type, gender, badge, tag_id, tag_name, speaker_audio_message_count, attachment_count, liked_num,
+             is_commercial, audition_message_count, is_audition_open, seats_taken, seats_max, speaker_message_count,
+             amount, original_price, buyable, has_audition, has_feedback, is_public, feedback_score])
 
-        live_info.append([subject, name, attachment_count, speaker_audio_message_count, duration,
-                          original_price, in_promotion, has_authenticated, user_type, headline, gender,
-                          speaker_message_count, tags, tag_id, liked_num, review_count, review_score,
-                          reply_message_count, seats_taken, seats_max])
+    cols = ['id', 'in_promotion', 'duration', 'reply_message_count', 'source', 'purchasable', 'is_refundable',
+            'has_authenticated', 'user_type', 'gender', 'badge', 'tag_id', 'tag_name', 'speaker_audio_message_count',
+            'attachment_count', 'liked_num', 'is_commercial',
+            'audition_message_count', 'is_audition_open', 'seats_taken', 'seats_max', 'speaker_message_count', 'amount',
+            'original_price', 'buyable', 'has_audition', 'has_feedback', 'is_public', 'feedback_score']
 
     df = pd.DataFrame(live_info, columns=cols)
-    df.to_excel(excel_writer='D:/ZhihuLive.xlsx', sheet_name='ZhihuLive', index=False)
+    df.to_excel(excel_writer='D:/ZhiHuLiveDB.xlsx', sheet_name='ZhihuLive', index=False)
     logging.info('Excel file has been generated...')
 
 
 if __name__ == '__main__':
-    recursive_crawl()
-    # output_fields_from_mongo()
+    # recursive_crawl()
+    output_fields_from_mongo()
