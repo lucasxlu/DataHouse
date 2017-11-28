@@ -51,7 +51,8 @@ DROP TABLE IF EXISTS `unit_convert`;
 CREATE TABLE `unit_convert` (
   `unit` varchar(255) DEFAULT NULL,
   `ratio` int(10) DEFAULT NULL,
-  `model` int(10) DEFAULT NULL
+  `model` int(10) DEFAULT NULL,
+  `desc` varchar(10) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 -- ----------------------------
 -- Records of unit_convert
