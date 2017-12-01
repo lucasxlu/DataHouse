@@ -73,15 +73,7 @@ INSERT INTO `unit_convert` VALUES ('千/月', '1000', '1', null);
 INSERT INTO `unit_convert` VALUES ('千以下/年', '1000', '13', '以下');
 INSERT INTO `unit_convert` VALUES ('千以下/月', '1000', '1', '以下');
 
-
-
 -- ----------------------------
--- Function structure for filter_num
+-- show all units
 -- ----------------------------
-DROP FUNCTION IF EXISTS `filter_num`;
-DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `filter_num`(str varchar(100)) RETURNS varchar(100) CHARSET utf8
-    READS SQL DATA
-return REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(str,'0',''),'1',''),'2',''),'3',''),'4',''),'5',''),'6',''),'7',''),'8',''),'9',''),'.',''),'-','')
-;;
-DELIMITER ;
+SELECT preprocess(jobsalaryname) from 51job GROUP BY preprocess(jobsalaryname);
