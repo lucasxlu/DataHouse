@@ -1,14 +1,15 @@
 """
 a web spider for Zhihu Live
 """
-import random
-import os
-import time
 import logging
+import random
+import time
 
+import jieba
+import jieba.analyse
+import pandas as pd
 import requests
 from pymongo import MongoClient
-import pandas as pd
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
@@ -27,8 +28,6 @@ def crawl(pagenum):
     url_pattern = 'https://api.zhihu.com/lives?limit=10&offset=%d&includes=live' % pagenum
     headers = {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-        'Accept-Encoding': 'gzip, deflate, br',
         'Host': 'api.zhihu.com',
         'Upgrade-Insecure-Requests': '1',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36',
@@ -36,7 +35,7 @@ def crawl(pagenum):
     cookies = dict(
         cookies_are='')
 
-    response = requests.get(url=url_pattern, headers=headers, cookies=cookies)
+    response = requests.get(url=url_pattern, headers=headers, cookies=cookies, timeout=20)
     if response.status_code == 200:
         live_json = response.json()
         time.sleep(random.randint(2, 5))  # a range between 2s and 5s
@@ -90,7 +89,7 @@ def output_fields_from_mongo():
     """
     client = MongoClient()
     db = client.zhihu.live
-    lives = db.find({"status": "ended", "review.count": {"$gt": 50}})
+    lives = db.find({"status": "ended", "review.count": {"$gt": 100}})
 
     live_info = []
 
@@ -124,25 +123,48 @@ def output_fields_from_mongo():
         has_audition = int(live['has_audition'])
         has_feedback = int(live['has_feedback'])
         is_public = live['is_public']
-        feedback_score = live['feedback_score']
+        review_score = live['review']['score']
 
         live_info.append(
             [id, in_promotion, duration, reply_message_count, source, purchasable, is_refundable, has_authenticated,
              user_type, gender, badge, tag_id, tag_name, speaker_audio_message_count, attachment_count, liked_num,
              is_commercial, audition_message_count, is_audition_open, seats_taken, seats_max, speaker_message_count,
-             amount, original_price, buyable, has_audition, has_feedback, is_public, feedback_score])
+             amount, original_price, buyable, has_audition, has_feedback, is_public, review_score])
 
     cols = ['id', 'in_promotion', 'duration', 'reply_message_count', 'source', 'purchasable', 'is_refundable',
             'has_authenticated', 'user_type', 'gender', 'badge', 'tag_id', 'tag_name', 'speaker_audio_message_count',
             'attachment_count', 'liked_num', 'is_commercial',
             'audition_message_count', 'is_audition_open', 'seats_taken', 'seats_max', 'speaker_message_count', 'amount',
-            'original_price', 'buyable', 'has_audition', 'has_feedback', 'is_public', 'feedback_score']
+            'original_price', 'buyable', 'has_audition', 'has_feedback', 'is_public', 'review_score']
 
     df = pd.DataFrame(live_info, columns=cols)
     df.to_excel(excel_writer='D:/ZhiHuLiveDB.xlsx', sheet_name='ZhihuLive', index=False)
     logging.info('Excel file has been generated...')
 
 
+def text_analysis(high_quality=True, score_margin=4):
+    """
+    text analysis with jieba
+    :param high_quality:
+    :return:
+    """
+    client = MongoClient()
+    db = client.zhihu.live
+    if high_quality:
+        lives = db.find({"status": "ended", "review.score": {"$gt": score_margin}}, {"description": 1, "_id": 0})
+    else:
+        lives = db.find({"status": "ended", "review.score": {"$lt": score_margin}}, {"description": 1, "_id": 0})
+
+    text = ''.join([live['description'] for live in lives])
+
+    jieba.analyse.set_stop_words('./stopwords.txt')
+    jieba.load_userdict('./userdict.txt')
+    word_list = jieba.analyse.extract_tags(text, topK=30, withWeight=True, allowPOS=())
+    for _ in word_list:
+        print(_[0] + ', ' + str(_[1]))
+
+
 if __name__ == '__main__':
     # recursive_crawl()
-    output_fields_from_mongo()
+    # output_fields_from_mongo()
+    text_analysis(False, 3)
