@@ -95,6 +95,10 @@ def output_fields_from_mongo():
 
     for live in lives:
         id = live['id']
+        speaker_name = live['speaker']['member']['name']
+        speaker_url = live['speaker']['member']['url_token']
+        live_subject = live['subject']
+        live_id = live['id']
         in_promotion = int(live['in_promotion'])
         duration = live['duration']
         reply_message_count = live['reply_message_count']
@@ -123,19 +127,22 @@ def output_fields_from_mongo():
         has_audition = int(live['has_audition'])
         has_feedback = int(live['has_feedback'])
         is_public = live['is_public']
+        review_count = live['review']['count']
         review_score = live['review']['score']
 
         live_info.append(
-            [id, in_promotion, duration, reply_message_count, source, purchasable, is_refundable, has_authenticated,
+            [id, speaker_name, speaker_url, live_subject, live_id, in_promotion, duration, reply_message_count, source,
+             purchasable, is_refundable, has_authenticated,
              user_type, gender, badge, tag_id, tag_name, speaker_audio_message_count, attachment_count, liked_num,
              is_commercial, audition_message_count, is_audition_open, seats_taken, seats_max, speaker_message_count,
-             amount, original_price, buyable, has_audition, has_feedback, is_public, review_score])
+             amount, original_price, buyable, has_audition, has_feedback, is_public, review_count, review_score])
 
-    cols = ['id', 'in_promotion', 'duration', 'reply_message_count', 'source', 'purchasable', 'is_refundable',
-            'has_authenticated', 'user_type', 'gender', 'badge', 'tag_id', 'tag_name', 'speaker_audio_message_count',
-            'attachment_count', 'liked_num', 'is_commercial',
+    cols = ['id', 'speaker_name', 'speaker_url', 'live_subject', 'live_id', 'in_promotion', 'duration',
+            'reply_message_count', 'source', 'purchasable',
+            'is_refundable', 'has_authenticated', 'user_type', 'gender', 'badge', 'tag_id', 'tag_name',
+            'speaker_audio_message_count', 'attachment_count', 'liked_num', 'is_commercial',
             'audition_message_count', 'is_audition_open', 'seats_taken', 'seats_max', 'speaker_message_count', 'amount',
-            'original_price', 'buyable', 'has_audition', 'has_feedback', 'is_public', 'review_score']
+            'original_price', 'buyable', 'has_audition', 'has_feedback', 'is_public', 'review_count', 'review_score']
 
     df = pd.DataFrame(live_info, columns=cols)
     df.to_excel(excel_writer='D:/ZhiHuLiveDB.xlsx', sheet_name='ZhihuLive', index=False)
@@ -166,5 +173,5 @@ def text_analysis(high_quality=True, score_margin=4):
 
 if __name__ == '__main__':
     # recursive_crawl()
-    # output_fields_from_mongo()
-    text_analysis(False, 3)
+    output_fields_from_mongo()
+    # text_analysis(True, 4.2)
