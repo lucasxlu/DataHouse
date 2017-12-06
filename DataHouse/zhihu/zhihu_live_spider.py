@@ -173,5 +173,5 @@ def text_analysis(high_quality=True, score_margin=4):
 
 if __name__ == '__main__':
     # recursive_crawl()
-    output_fields_from_mongo()
-    # text_analysis(True, 4.2)
+    # output_fields_from_mongo()
+    text_analysis(True, 4.2)
