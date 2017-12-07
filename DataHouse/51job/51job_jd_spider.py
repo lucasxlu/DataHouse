@@ -1,3 +1,4 @@
+import pickle
 import requests
 from bs4 import BeautifulSoup
 from pymongo import MongoClient
@@ -103,11 +104,13 @@ if __name__ == '__main__':
     if jobid_list is not None:
         for jobid in jobid_list:
             try:
-                jd = crawl_jd('94557976')
+                jd = crawl_jd(jobid)
                 if jd is not None:
                     insert_jd(jd)
             except:
                 fail_list.append(jobid)
 
+    with open('./fail_list.bin', 'wb') as fp:
+        pickle.dump(fail_list, fp)
     print('finish processing...')
     print('*' * 100)
