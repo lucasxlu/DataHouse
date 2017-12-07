@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from pymongo import MongoClient
+import pymysql
 
 
 def crawl_jd(job_id):
@@ -62,10 +63,51 @@ def insert_jd(item):
     result = db.insert_one(item)
 
 
-if __name__ == '__main__':
+def mysql_connect(host, name, passwd):
+    """
+    connect to mysql server
+    :param host:
+    :param name:
+    :param passwd:
+    :return:
+    """
+    conn = pymysql.connect(host, name, name, passwd, use_unicode=True, charset="utf8")
+
+    return conn
+
+
+def query_from_mysql():
+    """
+    query all records from MySQL
+    :return:
+    """
+    con = mysql_connect()
+    cursor = con.cursor()
+
+    sql = "SELECT jobid FROM 51job"
     try:
-        jd = crawl_jd('94557976')
-        if jd is not None:
-            insert_jd(jd)
+        cursor.execute(sql)
+        results = cursor.fetchall()
+
+        return results
     except:
         pass
+
+
+if __name__ == '__main__':
+    print('*' * 100)
+    print('start processing...')
+
+    jobid_list = query_from_mysql()
+    fail_list = []
+    if jobid_list is not None:
+        for jobid in jobid_list:
+            try:
+                jd = crawl_jd('94557976')
+                if jd is not None:
+                    insert_jd(jd)
+            except:
+                fail_list.append(jobid)
+
+    print('finish processing...')
+    print('*' * 100)
