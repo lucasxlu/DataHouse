@@ -64,7 +64,7 @@ def insert_jd(item):
     result = db.insert_one(item)
 
 
-def mysql_connect(host, name, passwd):
+def mysql_connect(host, name, passwd, tabel_name):
     """
     connect to mysql server
     :param host:
@@ -72,7 +72,7 @@ def mysql_connect(host, name, passwd):
     :param passwd:
     :return:
     """
-    conn = pymysql.connect(host, name, name, passwd, use_unicode=True, charset="utf8")
+    conn = pymysql.connect(host, name, passwd, tabel_name, use_unicode=True, charset="utf8")
 
     return conn
 
@@ -107,6 +107,7 @@ if __name__ == '__main__':
                 jd = crawl_jd(jobid)
                 if jd is not None:
                     insert_jd(jd)
+                    print('insert %s successfully~' % str(jobid))
             except:
                 fail_list.append(jobid)
 

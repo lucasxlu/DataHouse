@@ -40,8 +40,8 @@ def parse_place_xml():
     return place
 
 
-def db_connect():
-    conn = pymysql.connect("localhost", "root", "root", "qcwy", use_unicode=True, charset="utf8")
+def db_connect(host, name, passwd, tabel_name):
+    conn = pymysql.connect(host, name, passwd, tabel_name, use_unicode=True, charset="utf8")
 
     return conn
 
