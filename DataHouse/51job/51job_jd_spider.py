@@ -104,7 +104,7 @@ if __name__ == '__main__':
     if jobid_list is not None:
         for jobid in jobid_list:
             try:
-                jd = crawl_jd(jobid)
+                jd = crawl_jd(jobid[0])
                 if jd is not None:
                     insert_jd(jd)
                     print('insert %s successfully~' % str(jobid))
