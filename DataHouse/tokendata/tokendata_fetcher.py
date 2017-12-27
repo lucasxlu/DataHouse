@@ -20,15 +20,19 @@ def precess_token_sales(json_str_path):
             try:
                 result.append([_['_id'], _['name'], _['description'], _['symbol'], _['status'], _['usd_raised'],
                                _['month'],
-                               time.ctime(_['start_date']).replace('08:00:00', '') if _['start_date'] != '' else '',
-                               time.ctime(_['end_date']).replace('08:00:00', '') if _['end_date'] != '' else '',
+                               time.ctime(_['start_date']).replace('08:00:00', '') if _['start_date']
+                                                                                      not in ['', '#N/A'] else '',
+                               time.ctime(_['end_date']).replace('08:00:00', '') if _['end_date']
+                                                                                    not in ['', '#N/A'] else '',
                                _['token_sale_price'],
                                _['current_token_price'], _['token_return'], _['whitepaper']])
             except:
                 result.append([_['_id'], _['name'], _['description'], '', _['status'], _['usd_raised'],
                                _['month'],
-                               time.ctime(_['start_date']).replace('08:00:00', '') if _['start_date'] != '' else '',
-                               time.ctime(_['end_date']).replace('08:00:00', '') if _['end_date'] != '' else '',
+                               time.ctime(_['start_date']).replace('08:00:00', '') if _['start_date']
+                                                                                      not in ['', 'N/A'] else '',
+                               time.ctime(_['end_date']).replace('08:00:00', '') if _['end_date']
+                                                                                    not in ['', 'N/A'] else '',
                                _['token_sale_price'],
                                _['current_token_price'], _['token_return'], _['whitepaper']])
 
@@ -36,9 +40,9 @@ def precess_token_sales(json_str_path):
                 'token_sale_price', 'current_token_price', 'token_return', 'whitepaper']
         df = pd.DataFrame(result, columns=cols)
 
-        df.to_excel("D:/TokenData.xlsx", sheet_name='TOKEN SALES', index=False)
+        df.to_excel("./TokenData.xlsx", sheet_name='TOKEN SALES', index=False)
         print('processing done!')
 
 
 if __name__ == '__main__':
-    precess_token_sales("D:/data.json")
+    precess_token_sales("./data.json")
