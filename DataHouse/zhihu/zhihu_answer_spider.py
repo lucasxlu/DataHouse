@@ -16,6 +16,12 @@ logging.basicConfig(level=logging.WARNING,
 
 
 def crawl_answers(question_id, offset):
+    """
+    crawl zhihu answers in one page
+    :param question_id:
+    :param offset:
+    :return:
+    """
     question_url = 'https://www.zhihu.com/api/v4/questions/%s/answers' % str(question_id)
     headers = {
         'accept': 'application/json, text/plain, */*',
@@ -54,10 +60,10 @@ def crawl_answers(question_id, offset):
 
 def recursive_crawl_answers(question_id):
     """
-        recursively crawl all Zhihu answers data
-        :return:
-        "Version:1.0
-        """
+    recursively crawl all Zhihu answers data
+    :param question_id:
+    :return:
+    """
     offset = 0
     while True:
         try:
