@@ -1,4 +1,9 @@
 import logging
+import configparser
+
+import smtplib
+import email.mime.multipart
+import email.mime.text
 
 import requests
 from pymongo import MongoClient
@@ -81,5 +86,35 @@ def insert_item(item):
     result = db.insert_one(item)
 
 
+def send_email(content, subject="Zhihu Answers", from_="m13207145966@qq.com", to_=""):
+    """
+    send email
+    :param content:
+    :param subject:
+    :param from_:
+    :param to_:
+    :return:
+    """
+    config = configparser.ConfigParser()
+    config.read('./163mail.ini')
+    msg = email.mime.multipart.MIMEMultipart()
+    msg['from'] = from_
+    msg['to'] = to_
+    msg['subject'] = subject
+    txt = email.mime.text.MIMEText(content)
+    msg.attach(txt)
+
+    smtp = smtplib.SMTP()
+    smtp.connect(config['163Mail']['host'], config['163Mail']['port'])
+    smtp.login(config['163Mail']['username'], config['163Mail']['password'])
+    smtp.sendmail(from_, to_, str(msg))
+    smtp.quit()
+
+    logging.info('send email successfully~')
+
+
 if __name__ == '__main__':
-    recursive_crawl_answers(60293871)
+    # recursive_crawl_answers(60293871)
+    send_email('Happy New year in advance, wish you a wonderful year, good evening!', 'Zhihu Answers',
+               'm13207145966@163.com',
+               '249048056@qq.com')
