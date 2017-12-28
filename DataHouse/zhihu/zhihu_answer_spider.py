@@ -114,7 +114,4 @@ def send_email(content, subject="Zhihu Answers", from_="m13207145966@qq.com", to
 
 
 if __name__ == '__main__':
-    # recursive_crawl_answers(60293871)
-    send_email('Happy New year in advance, wish you a wonderful year, good evening!', 'Zhihu Answers',
-               'm13207145966@163.com',
-               '249048056@qq.com')
+    recursive_crawl_answers(60293871)
