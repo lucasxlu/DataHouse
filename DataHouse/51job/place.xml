@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <places>
+    <place value="010000">北京</place>
+    <place value="020000">上海</place>
+    <place value="060000">重庆</place>
     <place value="030000">广东</place>
     <place value="070000">江苏</place>
     <place value="080000">浙江</place>
