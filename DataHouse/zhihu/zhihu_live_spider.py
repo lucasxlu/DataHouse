@@ -89,7 +89,7 @@ def output_fields_from_mongo():
     """
     client = MongoClient()
     db = client.zhihu.live
-    lives = db.find({"status": "ended", "review.count": {"$gt": 100}})
+    lives = db.find({"status": "ended", "review.count": {"$gt": 50}})
 
     live_info = []
 
@@ -122,7 +122,7 @@ def output_fields_from_mongo():
         seats_max = live['seats']['max']
         speaker_message_count = live['speaker_message_count']
         amount = live['fee']['amount']
-        original_price = live['fee']['original_price']
+        original_price = live['fee']['original_price'] / 100
         buyable = int(live['buyable'])
         has_audition = int(live['has_audition'])
         has_feedback = int(live['has_feedback'])
@@ -145,7 +145,7 @@ def output_fields_from_mongo():
             'original_price', 'buyable', 'has_audition', 'has_feedback', 'is_public', 'review_count', 'review_score']
 
     df = pd.DataFrame(live_info, columns=cols)
-    df.to_excel(excel_writer='D:/ZhiHuLiveDB.xlsx', sheet_name='ZhihuLive', index=False)
+    df.to_excel(excel_writer='./ZhiHuLiveDB.xlsx', sheet_name='ZhihuLive', index=False)
     logging.info('Excel file has been generated...')
 
 
@@ -173,5 +173,5 @@ def text_analysis(high_quality=True, score_margin=4):
 
 if __name__ == '__main__':
     # recursive_crawl()
-    # output_fields_from_mongo()
-    text_analysis(True, 4.2)
+    output_fields_from_mongo()
+    # text_analysis(True, 4.2)

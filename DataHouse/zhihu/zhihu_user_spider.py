@@ -59,10 +59,55 @@ def crawl_zhihu_user(user_id='xulu-0620'):
             pass
         print(zhihu_user)
         insert_item(zhihu_user)
-        # time.sleep(random.randint(2, 5))  # a range between 2s and 5s
+        time.sleep(random.randint(2, 5))  # a range between 2s and 5s
 
     else:
         print('Error ! error code is %d' % response.status_code)
+
+
+def crawl_zhihu_user_by_api(user_id='xulu-0620'):
+    """
+    crawl zhihu user info by zhihu api v4
+    :param user_id:
+    :return:
+    """
+    req_url = 'https://www.zhihu.com/api/v4/members/%s' % str(user_id)
+    payload = {
+        'include': 'locations,employments,gender,educations,business,voteup_count,thanked_Count,follower_count,'
+                   'following_count,cover_url,following_topic_count,following_question_count,following_favlists_count,'
+                   'following_columns_count,avatar_hue,answer_count,articles_count,pins_count,question_count,'
+                   'columns_count,commercial_question_count,favorite_count,favorited_count,logs_count,'
+                   'included_answers_count,included_articles_count,included_text,message_thread_token,account_status,'
+                   'is_active,is_bind_phone,is_force_renamed,is_bind_sina,is_privacy_protected,sina_weibo_url,'
+                   'sina_weibo_name,show_sina_weibo,is_blocking,is_blocked,is_following,is_followed,'
+                   'is_org_createpin_white_user,mutual_followees_count,vote_to_count,vote_from_count,thank_to_count,'
+                   'thank_from_count,thanked_count,description,hosted_live_count,participated_live_count,allow_message,'
+                   'industry_category,org_name,org_homepage,badge[?(type=best_answerer)].topics'
+    }
+
+    headers = {
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Accept-Language': 'zh-CN,zh;q=0.8',
+        'Host': 'www.zhihu.com',
+        'Upgrade-Insecure-Requests': '1',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Pragma': 'no-cache',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36'
+    }
+
+    cookies = dict(
+        cookies_are='')
+
+    response = requests.get(url=req_url, headers=headers, cookies=cookies, params=payload)
+    print(response.url)
+    if response.status_code == 200:
+        user_obj = response.json()
+        print(user_obj)
+        insert_item(user_obj)
+    else:
+        print('Error: %d' % response.status_code)
 
 
 def crawl_zhihu_followers(zhihu_user_id='xulu-0620'):
@@ -137,7 +182,8 @@ def query_and_crawl_zhihuer_from_mongo():
         if zhihu_user not in visited_zhihu_user:
             print('start crawling %s' % zhihu_user)
             try:
-                crawl_zhihu_user(zhihu_user)
+                crawl_zhihu_user_by_api(zhihu_user)
+                time.sleep(random.randint(2, 5))  # a range between 2s and 5s
             except:
                 pass
             visited_zhihu_user.append(zhihu_user)
