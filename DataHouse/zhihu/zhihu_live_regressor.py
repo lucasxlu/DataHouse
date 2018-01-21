@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn import preprocessing
 from sklearn.linear_model import RidgeCV
+from sklearn.neural_network import MLPRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 
@@ -10,9 +11,11 @@ def split_train_test(excel_path, test_ratio):
     df = df[df['review_score'] > 0]
     print(df.describe())
     print("*" * 100)
-    dataset = df.loc[:, ['duration', 'original_price',
-                         'has_authenticated', 'gender',
-                         'liked_num', 'seats_taken']]
+    dataset = df.loc[:, ['duration', 'reply_message_count', 'source', 'purchasable', 'is_refundable',
+                         'has_authenticated', 'user_type', 'gender', 'badge', 'speaker_audio_message_count',
+                         'attachment_count', 'liked_num', 'is_commercial', 'audition_message_count', 'seats_taken',
+                         'seats_max', 'speaker_message_count', 'original_price', 'has_audition', 'has_feedback',
+                         'review_count']]
     min_max_scaler = preprocessing.MinMaxScaler()
     dataset = min_max_scaler.fit_transform(dataset)
     dataset = pd.DataFrame(dataset)
@@ -33,15 +36,17 @@ def split_train_test(excel_path, test_ratio):
 def train_and_test_model(train, test, train_Y, test_Y):
     # model = Pipeline([('poly', PolynomialFeatures(degree=3)),
     #                   ('linear', LinearRegression(fit_intercept=False))])
-    model = RidgeCV(alphas=[_ * 0.1 for _ in range(1, 1000, 1)])
+    # model = RidgeCV(alphas=[_ * 0.1 for _ in range(1, 1000, 1)])
+    model = MLPRegressor(hidden_layer_sizes=(21, 32, 16, 16, 8, 1), early_stopping=True, alpha=1e-4,
+                         batch_size=16, learning_rate='adaptive')
     model.fit(train, train_Y)
     predicted_score = model.predict(test)
     mae_lr = round(mean_absolute_error(test_Y, predicted_score), 4)
     rmse_lr = round(np.math.sqrt(mean_squared_error(test_Y, predicted_score)), 4)
-    pc = round(np.corrcoef(test_Y, predicted_score)[0, 1], 4)
+    # pc = round(np.corrcoef(test_Y, predicted_score)[0, 1], 4)
     print('===============The Mean Absolute Error of Lasso Regression Model is {0}===================='.format(mae_lr))
     print('===============The Root Mean Square Error of Linear Model is {0}===================='.format(rmse_lr))
-    print('===============The Pearson Correlation of Model is {0}===================='.format(pc))
+    # print('===============The Pearson Correlation of Model is {0}===================='.format(pc))
 
 
 if __name__ == '__main__':
