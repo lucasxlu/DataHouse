@@ -37,7 +37,9 @@ def train_and_test_model(train, test, train_Y, test_Y):
     # model = Pipeline([('poly', PolynomialFeatures(degree=3)),
     #                   ('linear', LinearRegression(fit_intercept=False))])
     # model = RidgeCV(alphas=[_ * 0.1 for _ in range(1, 1000, 1)])
-    model = MLPRegressor(hidden_layer_sizes=(21, 32, 16, 16, 8, 1), early_stopping=True, alpha=1e-4,
+    # model = MLPRegressor(hidden_layer_sizes=(21, 8, 8, 8, 1), early_stopping=True, alpha=1e-4,
+    #                      batch_size=16, learning_rate='adaptive')
+    model = MLPRegressor(hidden_layer_sizes=(21, 8, 8, 1), early_stopping=True, alpha=1e-4,
                          batch_size=16, learning_rate='adaptive')
     model.fit(train, train_Y)
     predicted_score = model.predict(test)

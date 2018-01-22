@@ -4,6 +4,7 @@ a web spider for Zhihu Live
 import logging
 import random
 import time
+import time
 
 import jieba
 import jieba.analyse
@@ -89,12 +90,15 @@ def output_fields_from_mongo():
     """
     client = MongoClient()
     db = client.zhihu.live
-    lives = db.find({"status": "ended", "review.count": {"$gt": 50}})
+    lives = db.find({"status": "ended"})
+    # lives = db.find({"status": "ended", "review.count": {"$gt": 50}})
 
     live_info = []
 
     for live in lives:
         id = live['id']
+        created_at = str(live['created_at'])
+        starts_at = str(live['starts_at'])
         speaker_name = live['speaker']['member']['name']
         speaker_url = live['speaker']['member']['url_token']
         live_subject = live['subject']
@@ -131,21 +135,21 @@ def output_fields_from_mongo():
         review_score = live['review']['score']
 
         live_info.append(
-            [id, speaker_name, speaker_url, live_subject, live_id, in_promotion, duration, reply_message_count, source,
-             purchasable, is_refundable, has_authenticated,
+            [id, created_at, starts_at, speaker_name, speaker_url, live_subject, live_id, in_promotion, duration,
+             reply_message_count, source, purchasable, is_refundable, has_authenticated,
              user_type, gender, badge, tag_id, tag_name, speaker_audio_message_count, attachment_count, liked_num,
              is_commercial, audition_message_count, is_audition_open, seats_taken, seats_max, speaker_message_count,
              amount, original_price, buyable, has_audition, has_feedback, is_public, review_count, review_score])
 
-    cols = ['id', 'speaker_name', 'speaker_url', 'live_subject', 'live_id', 'in_promotion', 'duration',
-            'reply_message_count', 'source', 'purchasable',
+    cols = ['id', 'created_at', 'starts_at', 'speaker_name', 'speaker_url', 'live_subject', 'live_id', 'in_promotion',
+            'duration', 'reply_message_count', 'source', 'purchasable',
             'is_refundable', 'has_authenticated', 'user_type', 'gender', 'badge', 'tag_id', 'tag_name',
             'speaker_audio_message_count', 'attachment_count', 'liked_num', 'is_commercial',
             'audition_message_count', 'is_audition_open', 'seats_taken', 'seats_max', 'speaker_message_count', 'amount',
             'original_price', 'buyable', 'has_audition', 'has_feedback', 'is_public', 'review_count', 'review_score']
 
     df = pd.DataFrame(live_info, columns=cols)
-    df.to_excel(excel_writer='./ZhiHuLiveDB.xlsx', sheet_name='ZhihuLive', index=False)
+    df.to_excel(excel_writer='./ZhihuLiveDB.xlsx', sheet_name='ZhihuLive', index=False)
     logging.info('Excel file has been generated...')
 
 
