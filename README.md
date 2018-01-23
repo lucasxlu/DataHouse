@@ -34,8 +34,9 @@
    * [House Price Prediction](https://zhuanlan.zhihu.com/p/26949876); [Presentation](/Presentation/House_ML.pptx).
    * [Zhihu Live Analysis](https://zhuanlan.zhihu.com/p/30514792)
    * [City Analysis](https://zhuanlan.zhihu.com/p/28954770)
+   * [JonCn](https://www.zhihu.com/question/30080717/answer/234002087)
 
 
 ## Note
-   V1.6.2_ALPHA is released.
+   V 2.0_ALPHA is released.
    More features are being developed and will be released soon~  

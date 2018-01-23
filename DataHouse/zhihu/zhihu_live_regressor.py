@@ -36,11 +36,9 @@ def split_train_test(excel_path, test_ratio):
 def train_and_test_model(train, test, train_Y, test_Y):
     # model = Pipeline([('poly', PolynomialFeatures(degree=3)),
     #                   ('linear', LinearRegression(fit_intercept=False))])
-    # model = RidgeCV(alphas=[_ * 0.1 for _ in range(1, 1000, 1)])
-    # model = MLPRegressor(hidden_layer_sizes=(21, 8, 8, 8, 1), early_stopping=True, alpha=1e-4,
+    model = RidgeCV(alphas=[_ * 0.1 for _ in range(1, 1000, 1)])
+    # model = MLPRegressor(hidden_layer_sizes=(21, 8, 8, 1), early_stopping=True, alpha=1e-4,
     #                      batch_size=16, learning_rate='adaptive')
-    model = MLPRegressor(hidden_layer_sizes=(21, 8, 8, 1), early_stopping=True, alpha=1e-4,
-                         batch_size=16, learning_rate='adaptive')
     model.fit(train, train_Y)
     predicted_score = model.predict(test)
     mae_lr = round(mean_absolute_error(test_Y, predicted_score), 4)
@@ -49,6 +47,9 @@ def train_and_test_model(train, test, train_Y, test_Y):
     print('===============The Mean Absolute Error of Lasso Regression Model is {0}===================='.format(mae_lr))
     print('===============The Root Mean Square Error of Linear Model is {0}===================='.format(rmse_lr))
     # print('===============The Pearson Correlation of Model is {0}===================='.format(pc))
+
+    from DataHouse.zhihu.zhihu_util import out_result
+    out_result(predicted_score, test_Y)
 
 
 if __name__ == '__main__':
