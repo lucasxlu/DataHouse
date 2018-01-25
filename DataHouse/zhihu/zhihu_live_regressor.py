@@ -8,6 +8,8 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.svm import SVR
 
+import tensorflow as tf
+
 
 def split_train_test(excel_path, test_ratio):
     df = pd.read_excel(excel_path, sheetname="Preprocessed").fillna(value=0)
@@ -79,7 +81,51 @@ def feature_selection(X, y, k=15):
     return X, y
 
 
+def mtb_dnns(train, test, train_Y, test_Y):
+    """
+    play with MTB-DNNs
+    :param train:
+    :param test:
+    :param train_Y:
+    :param test_Y:
+    :return:
+    """
+    # Specify that all features have real-value data
+    feature_columns = [tf.feature_column.numeric_column("x", shape=[21])]
+
+    if not tf.gfile.Exists('./model') or tf.gfile.IsDirectory('./model'):
+        tf.gfile.MakeDirs('./model')
+
+    # Build 3 layer DNN with 10, 20, 10 units respectively.
+    classifier = tf.estimator.DNNRegressor(hidden_units=[16, 8, 8],
+                                           feature_columns=feature_columns,
+                                           model_dir="./model/mtb_dnns_tf",
+                                           label_dimension=1)
+    # Define the training inputs
+    train_input_fn = tf.estimator.inputs.numpy_input_fn(
+        x={"x": train},
+        y=train_Y,
+        num_epochs=None,
+        shuffle=True)
+
+    # Train model.
+    classifier.train(input_fn=train_input_fn, steps=100)
+
+    # Define the test inputs
+    test_input_fn = tf.estimator.inputs.numpy_input_fn(
+        x={"x": np.array(test)},
+        y=np.array(test_Y),
+        num_epochs=1,
+        shuffle=False)
+
+    # Evaluate accuracy.
+    accuracy_score = classifier.evaluate(input_fn=test_input_fn)["accuracy"]
+
+    print("\nTest Accuracy: {0:f}\n".format(accuracy_score))
+
+
 if __name__ == '__main__':
     train_set, test_set, train_label, test_label = split_train_test("./ZhihuLiveDB.xlsx", 0.2)
     print(train_set.shape)
-    train_and_test_model(train_set, test_set, train_label, test_label)
+    # train_and_test_model(train_set, test_set, train_label, test_label)
+    mtb_dnns(train_set, test_set, train_label, test_label)

@@ -23,7 +23,8 @@
    > scrapy  
    > pandas    
    > scikit-learn   
-   > pymongo
+   > pymongo    
+   > TensorFlow >= 1.3
    
    
 ## Installation
