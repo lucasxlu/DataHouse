@@ -2,9 +2,11 @@ import numpy as np
 import pandas as pd
 from sklearn import preprocessing
 from sklearn.feature_selection import VarianceThreshold, SelectKBest, chi2, f_regression
-from sklearn.linear_model import RidgeCV
+from sklearn.linear_model import RidgeCV, LassoCV
+from sklearn.neighbors import KNeighborsRegressor
 from sklearn.neural_network import MLPRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error
+from sklearn.svm import SVR
 
 
 def split_train_test(excel_path, test_ratio):
@@ -22,7 +24,7 @@ def split_train_test(excel_path, test_ratio):
 
     labels = df.loc[:, ['review_score']]
 
-    dataset, labels = feature_selection(dataset, labels, k=18)
+    dataset, labels = feature_selection(dataset, labels, k=15)
 
     dataset = pd.DataFrame(dataset)
     labels = pd.DataFrame(labels)
@@ -41,9 +43,15 @@ def split_train_test(excel_path, test_ratio):
 def train_and_test_model(train, test, train_Y, test_Y):
     # model = Pipeline([('poly', PolynomialFeatures(degree=3)),
     #                   ('linear', LinearRegression(fit_intercept=False))])
-    model = RidgeCV(alphas=[_ * 0.1 for _ in range(1, 1000, 1)])
-    # model = MLPRegressor(hidden_layer_sizes=(21, 8, 8, 1), early_stopping=True, alpha=1e-4,
-    #                      batch_size=16, learning_rate='adaptive')
+
+    # model = RidgeCV(alphas=[_ * 0.1 for _ in range(1, 1000, 1)])
+    # model = SVR(kernel='rbf', C=1e3, gamma=0.1)
+    # model = SVR(kernel='linear', C=1e3)
+    # model = SVR(kernel='poly', C=1e3, degree=2)
+    # model = KNeighborsRegressor(n_neighbors=10, n_jobs=4)
+
+    model = MLPRegressor(hidden_layer_sizes=(16, 8, 8), early_stopping=True, alpha=1e-4,
+                         batch_size=16, learning_rate='adaptive')
     model.fit(train, train_Y)
     predicted_score = model.predict(test)
     mae_lr = round(mean_absolute_error(test_Y, predicted_score), 4)
