@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn import preprocessing
+from sklearn.feature_selection import VarianceThreshold, SelectKBest, chi2, f_regression
 from sklearn.linear_model import RidgeCV
 from sklearn.neural_network import MLPRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error
@@ -18,11 +19,15 @@ def split_train_test(excel_path, test_ratio):
                          'review_count']]
     min_max_scaler = preprocessing.MinMaxScaler()
     dataset = min_max_scaler.fit_transform(dataset)
-    dataset = pd.DataFrame(dataset)
 
+    labels = df.loc[:, ['review_score']]
+
+    dataset, labels = feature_selection(dataset, labels, k=18)
+
+    dataset = pd.DataFrame(dataset)
+    labels = pd.DataFrame(labels)
     print(dataset.describe())
     print("*" * 10)
-    labels = df.loc[:, ['review_score']]
 
     shuffled_indices = np.random.permutation(len(df))
     test_set_size = int(len(df) * test_ratio)
@@ -52,6 +57,21 @@ def train_and_test_model(train, test, train_Y, test_Y):
     out_result(predicted_score, test_Y)
 
 
+def feature_selection(X, y, k=15):
+    """
+    feature selection
+    :param X:
+    :param y:
+    :return:
+    """
+    print(X.shape)
+    X = SelectKBest(f_regression, k=k).fit_transform(X, y)
+    print(X.shape)
+
+    return X, y
+
+
 if __name__ == '__main__':
     train_set, test_set, train_label, test_label = split_train_test("./ZhihuLiveDB.xlsx", 0.2)
+    print(train_set.shape)
     train_and_test_model(train_set, test_set, train_label, test_label)
