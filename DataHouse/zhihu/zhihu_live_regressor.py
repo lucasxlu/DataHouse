@@ -1,5 +1,8 @@
+import json
+
 import numpy as np
 import pandas as pd
+import requests
 from sklearn import preprocessing
 from sklearn.feature_selection import VarianceThreshold, SelectKBest, chi2, f_regression
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder, Imputer
@@ -8,49 +11,62 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.neural_network import MLPRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.svm import SVR
+from sklearn.externals import joblib
+
+import tensorflow as tf
 
 
-# import tensorflow as tf
-
-
-def split_train_test(excel_path, test_ratio):
+def split_train_test(excel_path, test_ratio, dl=True):
     # df = pd.read_excel(excel_path, sheetname="Preprocessed").fillna(value=0)
     df = pd.read_excel(excel_path, sheetname="Preprocessed")
     # df = df[df['review_score'] > 0]
     print("*" * 100)
-    dataset = df.loc[:, ['duration', 'reply_message_count', 'source', 'purchasable', 'is_refundable',
-                         'has_authenticated', 'user_type', 'gender', 'badge', 'tag_id', 'speaker_audio_message_count',
-                         'attachment_count', 'liked_num', 'is_commercial', 'audition_message_count', 'is_audition_open',
-                         'seats_taken', 'seats_max', 'speaker_message_count', 'amount', 'original_price',
-                         'has_audition', 'has_feedback', 'review_count']]
-    dataset['tag_id'] = dataset['tag_id'].fillna(value=0)
+    if not dl:
+        dataset = df.loc[:, ['duration', 'reply_message_count', 'source', 'purchasable', 'is_refundable',
+                             'has_authenticated', 'user_type', 'gender', 'badge', 'tag_id',
+                             'speaker_audio_message_count',
+                             'attachment_count', 'liked_num', 'is_commercial', 'audition_message_count',
+                             'is_audition_open',
+                             'seats_taken', 'seats_max', 'speaker_message_count', 'amount', 'original_price',
+                             'has_audition', 'has_feedback', 'review_count']]
+        dataset['tag_id'] = dataset['tag_id'].fillna(value=0)
 
-    imp = Imputer(missing_values='NaN', strategy='median', axis=0)
-    imp.fit(dataset)
+        imp = Imputer(missing_values='NaN', strategy='median', axis=0)
+        imp.fit(dataset)
 
-    source_le = LabelEncoder()
-    source_labels = source_le.fit_transform(dataset['source'])
-    dataset['source'] = source_labels
-    # source_mappings = {index: label for index, label in enumerate(source_le.classes_)}
+        source_le = LabelEncoder()
+        source_labels = source_le.fit_transform(dataset['source'])
+        dataset['source'] = source_labels
+        # source_mappings = {index: label for index, label in enumerate(source_le.classes_)}
 
-    enc = preprocessing.OneHotEncoder()
-    enc.fit_transform(
-        dataset[['source', 'purchasable', 'is_refundable', 'user_type', 'is_commercial', 'is_audition_open',
-                 'has_audition', 'has_feedback']])
+        enc = preprocessing.OneHotEncoder()
+        enc.fit_transform(
+            dataset[['source', 'purchasable', 'is_refundable', 'user_type', 'is_commercial', 'is_audition_open',
+                     'has_audition', 'has_feedback']])
 
-    tag_id_le = LabelEncoder()
-    tag_id_labels = tag_id_le.fit_transform(dataset['tag_id'])
-    dataset['tag_id'] = tag_id_labels
+        tag_id_le = LabelEncoder()
+        tag_id_labels = tag_id_le.fit_transform(dataset['tag_id'])
+        dataset['tag_id'] = tag_id_labels
 
-    min_max_scaler = preprocessing.MinMaxScaler()
-    dataset = min_max_scaler.fit_transform(dataset)
+        min_max_scaler = preprocessing.MinMaxScaler()
+        dataset = min_max_scaler.fit_transform(dataset)
 
-    labels = df.loc[:, ['review_score']]
+        labels = df.loc[:, ['review_score']]
 
-    dataset, labels = feature_selection(dataset, labels, k=15)
+        dataset, labels = feature_selection(dataset, labels, k=15)
 
-    dataset = pd.DataFrame(dataset)
-    labels = pd.DataFrame(labels)
+        dataset = pd.DataFrame(dataset)
+        labels = pd.DataFrame(labels)
+
+    else:
+        dataset = df.loc[:, ['duration', 'reply_message_count', 'source', 'purchasable', 'is_refundable',
+                             'has_authenticated', 'user_type', 'gender', 'badge', 'speaker_audio_message_count',
+                             'attachment_count', 'liked_num', 'is_commercial', 'audition_message_count',
+                             'is_audition_open', 'seats_taken', 'seats_max', 'speaker_message_count', 'amount',
+                             'original_price', 'has_audition', 'has_feedback', 'review_count']]
+
+        labels = df.loc[:, ['review_score']]
+
     print(dataset.describe())
     print("*" * 10)
 
@@ -102,51 +118,79 @@ def feature_selection(X, y, k=15):
     return X, y
 
 
-# def mtb_dnns(train, test, train_Y, test_Y):
-#     """
-#     play with MTB-DNNs
-#     :param train:
-#     :param test:
-#     :param train_Y:
-#     :param test_Y:
-#     :return:
-#     """
-#     # Specify that all features have real-value data
-#     feature_columns = [tf.feature_column.numeric_column("x", shape=[21])]
-#
-#     if not tf.gfile.Exists('./model') or tf.gfile.IsDirectory('./model'):
-#         tf.gfile.MakeDirs('./model')
-#
-#     # Build 3 layer DNN with 10, 20, 10 units respectively.
-#     classifier = tf.estimator.DNNRegressor(hidden_units=[16, 8, 8],
-#                                            feature_columns=feature_columns,
-#                                            model_dir="./model/mtb_dnns_tf",
-#                                            label_dimension=1)
-#     # Define the training inputs
-#     train_input_fn = tf.estimator.inputs.numpy_input_fn(
-#         x={"x": train},
-#         y=train_Y,
-#         num_epochs=None,
-#         shuffle=True)
-#
-#     # Train model.
-#     classifier.train(input_fn=train_input_fn, steps=100)
-#
-#     # Define the test inputs
-#     test_input_fn = tf.estimator.inputs.numpy_input_fn(
-#         x={"x": np.array(test)},
-#         y=np.array(test_Y),
-#         num_epochs=1,
-#         shuffle=False)
-#
-#     # Evaluate accuracy.
-#     accuracy_score = classifier.evaluate(input_fn=test_input_fn)["accuracy"]
-#
-#     print("\nTest Accuracy: {0:f}\n".format(accuracy_score))
+def mtb_dnns(train, test, train_Y, test_Y):
+    """
+    play with MTB-DNNs
+    :param train:
+    :param test:
+    :param train_Y:
+    :param test_Y:
+    :return:
+    """
+    # Specify that all features have real-value data
+    feature_columns = [tf.feature_column.numeric_column("x", shape=[23])]
+
+    if not tf.gfile.Exists('./model') or not tf.gfile.IsDirectory('./model'):
+        tf.gfile.MakeDirs('./model')
+
+    mtb_dnns = tf.estimator.DNNRegressor(hidden_units=[16, 8, 8],
+                                         feature_columns=feature_columns,
+                                         model_dir="./model/mtb_dnns_tf",
+                                         activation_fn=tf.nn.relu,
+                                         optimizer=tf.train.ProximalAdagradOptimizer(learning_rate=0.1,
+                                                                                     l1_regularization_strength=0.001)
+                                         )
+    # Define the training inputs
+    train_input_fn = tf.estimator.inputs.numpy_input_fn(
+        x={"x": train},
+        y=train_Y,
+        num_epochs=None,
+        shuffle=True)
+
+    # Train model.
+    mtb_dnns.train(input_fn=train_input_fn, steps=100)
+
+    # Define the test inputs
+    test_input_fn = tf.estimator.inputs.numpy_input_fn(
+        x={"x": np.array(test)},
+        y=np.array(test_Y),
+        num_epochs=1,
+        shuffle=False)
+
+    # Evaluate accuracy.
+    metrics = mtb_dnns.evaluate(input_fn=test_input_fn, steps=10)
+    print(metrics)
+
+
+def predict_score(zhihu_live_id):
+    """
+    predict a Zhihu Live's score with ML model
+    :param zhihu_live_id:
+    :return:
+    """
+    req_url = 'https://api.zhihu.com/lives/%s' % str(zhihu_live_id).strip()
+    headers = {
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Host': 'api.zhihu.com',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36',
+        'Upgrade-Insecure-Requests': '1'
+    }
+    cookies = dict(
+        cookies_are='')
+    response = requests.get(req_url, headers=headers, cookies=cookies)
+    if response.status_code == 200:
+        live = response.json()
+        if tf.gfile.Exists('./model/regression.pkl') and tf.gfile.IsDirectory('./model/regression.pkl'):
+            reg = joblib.load('./model/regression.pkl')
+            score = reg.predict()
+    else:
+        print(response.status_code)
 
 
 if __name__ == '__main__':
     train_set, test_set, train_label, test_label = split_train_test("./ZhihuLiveDB.xlsx", 0.2)
-    print(train_set.shape)
-    train_and_test_model(train_set, test_set, train_label, test_label)
-    # mtb_dnns(train_set, test_set, train_label, test_label)
+    # print(train_set.shape)
+    # train_and_test_model(train_set, test_set, train_label, test_label)
+    mtb_dnns(train_set, test_set, train_label, test_label)
+
+    # predict_score('890563708105945088')
