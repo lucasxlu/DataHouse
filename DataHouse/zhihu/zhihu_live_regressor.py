@@ -24,6 +24,48 @@ import torch.optim as optim
 from torch.autograd import Variable
 
 
+class MTBDNN(nn.Module):
+    def __init__(self, K=1):
+        super(MTBDNN, self).__init__()
+        self.K = K
+        self.layers = nn.Sequential(OrderedDict([
+            ('fc1', nn.Sequential(nn.Linear(23, 16),
+                                  nn.ReLU())),
+            ('fc2', nn.Sequential(nn.Linear(16, 8),
+                                  nn.ReLU())),
+            ('fc3', nn.Sequential(nn.Linear(8, 8),
+                                  nn.ReLU()))]))
+
+        self.branches = nn.ModuleList([nn.Sequential(nn.Dropout(0.5),
+                                                     nn.Linear(8, 1)) for _ in range(K)])
+
+
+class MLP(nn.Module):
+
+    def __init__(self):
+        super(MLP, self).__init__()
+        self.fc1 = nn.Linear(23, 16)
+        self.fc2 = nn.Linear(16, 8)
+        self.fc3 = nn.Linear(8, 8)
+        self.fc4 = nn.Linear(8, 1)
+
+    def forward(self, x):
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = F.relu(self.fc3(x))
+        x = self.fc4(x)
+
+        return x
+
+    def num_flat_features(self, x):
+        size = x.size()[1:]  # all dimensions except the batch dimension
+        num_features = 1
+        for s in size:
+            num_features *= s
+
+        return num_features
+
+
 def split_train_test(excel_path, test_ratio, dl=True):
     # df = pd.read_excel(excel_path, sheetname="Preprocessed").fillna(value=0)
     df = pd.read_excel(excel_path, sheetname="Preprocessed")
@@ -139,46 +181,6 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch):
     :return:
     """
 
-    class MTBDNN(nn.Module):
-        def __init__(self, K=1):
-            super(MTBDNN, self).__init__()
-            self.K = K
-            self.layers = nn.Sequential(OrderedDict([
-                ('fc1', nn.Sequential(nn.Linear(23, 16),
-                                      nn.ReLU())),
-                ('fc2', nn.Sequential(nn.Linear(16, 8),
-                                      nn.ReLU())),
-                ('fc3', nn.Sequential(nn.Linear(8, 8),
-                                      nn.ReLU()))]))
-
-            self.branches = nn.ModuleList([nn.Sequential(nn.Dropout(0.5),
-                                                         nn.Linear(8, 1)) for _ in range(K)])
-
-    class MLP(nn.Module):
-
-        def __init__(self):
-            super(MLP, self).__init__()
-            self.fc1 = nn.Linear(23, 16)
-            self.fc2 = nn.Linear(16, 8)
-            self.fc3 = nn.Linear(8, 8)
-            self.fc4 = nn.Linear(8, 1)
-
-        def forward(self, x):
-            x = F.relu(self.fc1(x))
-            x = F.relu(self.fc2(x))
-            x = F.relu(self.fc3(x))
-            x = self.fc4(x)
-
-            return x
-
-        def num_flat_features(self, x):
-            size = x.size()[1:]  # all dimensions except the batch dimension
-            num_features = 1
-            for s in size:
-                num_features *= s
-
-            return num_features
-
     class ZhihuLiveDataset(Dataset):
 
         def __init__(self, X, y, transform=None):
@@ -263,10 +265,10 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch):
 def predict_score(zhihu_live_id):
     """
     predict a Zhihu Live's score with ML model
+    :Note: Normalization need to be done!!!
     :param zhihu_live_id:
     :return:
     """
-    import tensorflow as tf
     req_url = 'https://api.zhihu.com/lives/%s' % str(zhihu_live_id).strip()
     headers = {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
@@ -279,17 +281,40 @@ def predict_score(zhihu_live_id):
     response = requests.get(req_url, headers=headers, cookies=cookies)
     if response.status_code == 200:
         live = response.json()
-        if tf.gfile.Exists('./model/regression.pkl') and tf.gfile.IsDirectory('./model/regression.pkl'):
-            reg = joblib.load('./model/regression.pkl')
-            score = reg.predict()
+        print(live)
+        if live['review']['count'] < 18:
+            print('The number of scored people is scarce, please buy this Live carefully!')
+        else:
+            # if tf.gfile.Exists('./model/regression.pkl'):
+            #     reg = joblib.load('./model/regression.pkl')
+            #     score = reg.predict()
+            if os.path.exists('./model/zhihu_live_mlp.pth'):
+                net = MLP()
+                net.load_state_dict(torch.load('./model/zhihu_live_mlp.pth'))
+                input = np.array([live['duration'], live['reply_message_count'], 1 if live['source'] == 'admin' else 0,
+                                  int(live['purchasable']), int(live['is_refundable']), int(live['has_authenticated']),
+                                  0 if live['speaker']['member']['user_type'] == 'organization' else 1,
+                                  live['speaker']['member']['gender'], len(live['speaker']['member']['badge']),
+                                  live['speaker_audio_message_count'], live['attachment_count'], live['liked_num'],
+                                  int(live['is_commercial']), live['audition_message_count'],
+                                  int(live['is_audition_open']),
+                                  live['seats']['taken'], live['seats']['max'], live['speaker_message_count'],
+                                  live['fee']['amount'],
+                                  live['fee']['original_price'] / 100, int(live['has_audition']),
+                                  int(live['has_feedback']), live['review']['count']], dtype=np.float32)
+                if torch.cuda.is_available():
+                    net = net.cuda()
+                    input = Variable(torch.from_numpy(input)).cuda()
+
+                score = net.forward(input)
+                print('Score is %d' % score)
     else:
         print(response.status_code)
 
 
 if __name__ == '__main__':
-    train_set, test_set, train_label, test_label = split_train_test("./ZhihuLiveDB.xlsx", 0.2)
-    # print(train_set.shape)
+    # train_set, test_set, train_label, test_label = split_train_test("./ZhihuLiveDB.xlsx", 0.2)
     # train_and_test_model(train_set, test_set, train_label, test_label)
-    mtb_dnns(train_set, test_set, train_label, test_label, 50)
+    # mtb_dnns(train_set, test_set, train_label, test_label, 50)
 
-    # predict_score('890563708105945088')
+    predict_score('788099469471121408')
