@@ -16,6 +16,7 @@ from sklearn.svm import SVR
 from sklearn.externals import joblib
 
 import torch
+from torch.optim import lr_scheduler
 from torch.utils.data import Dataset, DataLoader
 import torch.nn as nn
 import torch.nn.functional as F
@@ -159,12 +160,14 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch):
             super(MLP, self).__init__()
             self.fc1 = nn.Linear(23, 16)
             self.fc2 = nn.Linear(16, 8)
-            self.fc3 = nn.Linear(8, 1)
+            self.fc3 = nn.Linear(8, 8)
+            self.fc4 = nn.Linear(8, 1)
 
         def forward(self, x):
             x = F.relu(self.fc1(x))
             x = F.relu(self.fc2(x))
-            x = self.fc3(x)
+            x = F.relu(self.fc3(x))
+            x = self.fc4(x)
 
             return x
 
@@ -202,34 +205,32 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch):
 
     mlp = MLP()
     criterion = nn.MSELoss()
-    optimizer = optim.SGD(mlp.parameters(), lr=0.001, momentum=0.9)
+    optimizer = optim.Adam(mlp.parameters(), weight_decay=1e-4)
+    # optimizer = optim.SGD(mlp.parameters(), lr=0.001, momentum=0.9)
+    # learning_rate_scheduler = lr_scheduler.ExponentialLR(optimizer, gamma=0.5)
 
     for epoch in range(epoch):  # loop over the dataset multiple times
 
         running_loss = 0.0
         for i, data_batch in enumerate(trainloader):
-            # get the inputs
+            # learning_rate_scheduler.step()
             inputs, labels = data_batch['data'], data_batch['label']
 
-            # wrap them in Variable
             inputs, labels = Variable(inputs), Variable(labels)
             if torch.cuda.is_available():
                 inputs = inputs.cuda()
                 labels = labels.cuda()
                 mlp = mlp.cuda()
 
-            # zero the parameter gradients
             optimizer.zero_grad()
 
-            # forward + backward + optimize
             outputs = mlp.forward(inputs)
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
 
-            # print statistics
             running_loss += loss.data[0]
-            if i % 100 == 99:  # print every 2000 mini-batches
+            if i % 100 == 99:
                 print('[%d, %5d] loss: %.3f' %
                       (epoch + 1, i + 1, running_loss / 100))
                 running_loss = 0.0
@@ -289,6 +290,6 @@ if __name__ == '__main__':
     train_set, test_set, train_label, test_label = split_train_test("./ZhihuLiveDB.xlsx", 0.2)
     # print(train_set.shape)
     # train_and_test_model(train_set, test_set, train_label, test_label)
-    mtb_dnns(train_set, test_set, train_label, test_label, 10)
+    mtb_dnns(train_set, test_set, train_label, test_label, 50)
 
     # predict_score('890563708105945088')
