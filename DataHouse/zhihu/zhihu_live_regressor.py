@@ -23,6 +23,8 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
 
+BATCH_SIZE = 16
+
 
 class MTBDNN(nn.Module):
     def __init__(self, K=5):
@@ -45,17 +47,19 @@ class MTBDNN(nn.Module):
                                        )) for _ in range(2, K, 1)])
 
     def forward(self, x):
-        out = Variable(torch.zeros(1))
-        # if torch.cuda.is_available():
-        #     out.cuda()
+        out = Variable(torch.zeros([BATCH_SIZE, 1]))
+        if torch.cuda.is_available():
+            out.cuda()
 
-        for name, module in self.layers.named_children():
-            if name.startswith('fc'):
-                x = module(x)
-            else:
-                for idx in range(self.K):
-                    x = self.branches[idx](x)
-                    out += x
+        for idx, module in self.layers.named_children():
+            x = F.relu(module(x))
+
+        for idx, module in self.branches.named_children():
+            print(module)
+            x = module[0](x)
+            x = F.relu(x)
+            x = module[1](x)
+            out = torch.add(x, out)
 
         return out.mean()
 
@@ -222,9 +226,9 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch):
 
             return sample
 
-    trainloader = torch.utils.data.DataLoader(ZhihuLiveDataset(train, train_Y), batch_size=16,
+    trainloader = torch.utils.data.DataLoader(ZhihuLiveDataset(train, train_Y), batch_size=BATCH_SIZE,
                                               shuffle=True, num_workers=4)
-    testloader = torch.utils.data.DataLoader(ZhihuLiveDataset(test, test_Y), batch_size=16,
+    testloader = torch.utils.data.DataLoader(ZhihuLiveDataset(test, test_Y), batch_size=BATCH_SIZE,
                                              shuffle=False, num_workers=4)
 
     mtbdnn = MTBDNN(5)
