@@ -27,7 +27,7 @@ BATCH_SIZE = 16
 
 
 class MTBDNN(nn.Module):
-    def __init__(self, K=5):
+    def __init__(self, K=1):
         super(MTBDNN, self).__init__()
         self.K = K
         self.layers = nn.Sequential(OrderedDict([
@@ -39,29 +39,39 @@ class MTBDNN(nn.Module):
                                   nn.ReLU()))]))
 
         # self.branches = nn.ModuleList(
-        #     [nn.Sequential(nn.Linear(8, _), nn.Linear(_, 1)) for _ in range(2, K, 1)])
+        #     [nn.Sequential(OrderedDict([('br%d' % (_), nn.Linear(8, 4)),
+        #                                 ('out%d' % (_), nn.Linear(4, 1))]
+        #                                )) for _ in range(K)])
 
         self.branches = nn.ModuleList(
-            [nn.Sequential(OrderedDict([('br%d' % (_ - 1), nn.Linear(8, _)),
-                                        ('out%d' % (_ - 1), nn.Linear(_, 1))]
-                                       )) for _ in range(2, K, 1)])
+            [nn.Sequential(OrderedDict([('br0', nn.Linear(8, 4)),
+                                        ('out0', nn.Linear(4, 1))]
+                                       )),
+             nn.Sequential(OrderedDict([('br1', nn.Linear(8, 3)),
+                                        ('out0', nn.Linear(3, 1))]))])
 
     def forward(self, x):
-        out = Variable(torch.zeros([BATCH_SIZE, 1]))
-        if torch.cuda.is_available():
-            out.cuda()
+        out = np.zeros([BATCH_SIZE, 1], dtype=np.double)
 
         for idx, module in self.layers.named_children():
             x = F.relu(module(x))
+            temp = x
 
         for idx, module in self.branches.named_children():
+            print('+' * 100)
             print(module)
-            x = module[0](x)
-            x = F.relu(x)
+            print('+' * 100)
+            x = F.relu(module[0](temp))
             x = module[1](x)
-            out = torch.add(x, out)
 
-        return out.mean()
+            out += x.data.cpu().numpy()
+
+        out = torch.DoubleTensor(torch.from_numpy(out))
+        if torch.cuda.is_available():
+            out.cuda()
+        out = Variable(out)
+
+        return out / 2
 
 
 class MLP(nn.Module):
@@ -231,7 +241,7 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch):
     testloader = torch.utils.data.DataLoader(ZhihuLiveDataset(test, test_Y), batch_size=BATCH_SIZE,
                                              shuffle=False, num_workers=4)
 
-    mtbdnn = MTBDNN(5)
+    mtbdnn = MTBDNN()
     # mlp = MLP()
     print(mtbdnn)
     criterion = nn.MSELoss()
