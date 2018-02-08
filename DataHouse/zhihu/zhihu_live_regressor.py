@@ -25,7 +25,7 @@ from torch.autograd import Variable
 
 
 class MTBDNN(nn.Module):
-    def __init__(self, K=1):
+    def __init__(self, K=5):
         super(MTBDNN, self).__init__()
         self.K = K
         self.layers = nn.Sequential(OrderedDict([
@@ -36,8 +36,28 @@ class MTBDNN(nn.Module):
             ('fc3', nn.Sequential(nn.Linear(8, 8),
                                   nn.ReLU()))]))
 
-        self.branches = nn.ModuleList([nn.Sequential(nn.Dropout(0.5),
-                                                     nn.Linear(8, 1)) for _ in range(K)])
+        # self.branches = nn.ModuleList(
+        #     [nn.Sequential(nn.Linear(8, _), nn.Linear(_, 1)) for _ in range(2, K, 1)])
+
+        self.branches = nn.ModuleList(
+            [nn.Sequential(OrderedDict([('br%d' % (_ - 1), nn.Linear(8, _)),
+                                        ('out%d' % (_ - 1), nn.Linear(_, 1))]
+                                       )) for _ in range(2, K, 1)])
+
+    def forward(self, x):
+        out = Variable(torch.zeros(1))
+        # if torch.cuda.is_available():
+        #     out.cuda()
+
+        for name, module in self.layers.named_children():
+            if name.startswith('fc'):
+                x = module(x)
+            else:
+                for idx in range(self.K):
+                    x = self.branches[idx](x)
+                    out += x
+
+        return out.mean()
 
 
 class MLP(nn.Module):
@@ -47,12 +67,14 @@ class MLP(nn.Module):
         self.fc1 = nn.Linear(23, 16)
         self.fc2 = nn.Linear(16, 8)
         self.fc3 = nn.Linear(8, 8)
+        # self.drop1 = nn.Dropout2d(0.7)
         self.fc4 = nn.Linear(8, 1)
 
     def forward(self, x):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
+        # x = self.drop1(x)
         x = self.fc4(x)
 
         return x
@@ -205,9 +227,11 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch):
     testloader = torch.utils.data.DataLoader(ZhihuLiveDataset(test, test_Y), batch_size=16,
                                              shuffle=False, num_workers=4)
 
-    mlp = MLP()
+    mtbdnn = MTBDNN(5)
+    # mlp = MLP()
+    print(mtbdnn)
     criterion = nn.MSELoss()
-    optimizer = optim.Adam(mlp.parameters(), weight_decay=1e-4)
+    optimizer = optim.Adam(mtbdnn.parameters(), weight_decay=1e-4)
     # optimizer = optim.SGD(mlp.parameters(), lr=0.001, momentum=0.9)
     # learning_rate_scheduler = lr_scheduler.ExponentialLR(optimizer, gamma=0.5)
 
@@ -222,11 +246,11 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch):
             if torch.cuda.is_available():
                 inputs = inputs.cuda()
                 labels = labels.cuda()
-                mlp = mlp.cuda()
+                mtbdnn = mtbdnn.cuda()
 
             optimizer.zero_grad()
 
-            outputs = mlp.forward(inputs)
+            outputs = mtbdnn.forward(inputs)
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
@@ -242,7 +266,8 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch):
     model_path_dir = './model'
     if not os.path.isdir(model_path_dir) or not os.path.exists(model_path_dir):
         os.makedirs(model_path_dir)
-    torch.save(mlp.state_dict(), os.path.join(model_path_dir, 'zhihu_live_mlp.pth'))
+    torch.save(mtbdnn.state_dict(), os.path.join(model_path_dir, 'zhihu_live_mtbdnn.pth'))
+    # torch.save(mlp.state_dict(), os.path.join(model_path_dir, 'zhihu_live_mlp.pth'))
 
     predicted_labels = []
     gt_labels = []
@@ -250,9 +275,9 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch):
         inputs, labels = data_batch['data'], data_batch['label']
         if torch.cuda.is_available():
             inputs = inputs.cuda()
-            mlp = mlp.cuda()
+            mtbdnn = mtbdnn.cuda()
 
-        outputs = mlp.forward(Variable(inputs))
+        outputs = mtbdnn.forward(Variable(inputs))
         predicted_labels += outputs.cpu().data.numpy().tolist()
         gt_labels += labels.numpy().tolist()
 
@@ -313,8 +338,8 @@ def predict_score(zhihu_live_id):
 
 
 if __name__ == '__main__':
-    # train_set, test_set, train_label, test_label = split_train_test("./ZhihuLiveDB.xlsx", 0.2)
+    train_set, test_set, train_label, test_label = split_train_test("./ZhihuLiveDB.xlsx", 0.2)
     # train_and_test_model(train_set, test_set, train_label, test_label)
-    # mtb_dnns(train_set, test_set, train_label, test_label, 50)
+    mtb_dnns(train_set, test_set, train_label, test_label, 100)
 
-    predict_score('788099469471121408')
+    # predict_score('788099469471121408')
