@@ -48,7 +48,7 @@ class MTBDNN(nn.Module):
                                         ('out0', nn.Linear(4, 1))]
                                        )),
              nn.Sequential(OrderedDict([('br1', nn.Linear(8, 3)),
-                                        ('out0', nn.Linear(3, 1))]))])
+                                        ('out1', nn.Linear(3, 1))]))])
 
     def forward(self, x):
         out = np.zeros([BATCH_SIZE, 1], dtype=np.double)
@@ -256,7 +256,7 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch):
             # learning_rate_scheduler.step()
             inputs, labels = data_batch['data'], data_batch['label']
 
-            inputs, labels = Variable(inputs), Variable(labels)
+            inputs, labels = Variable(inputs), Variable(torch.from_numpy(labels.numpy().astype(float)))
             if torch.cuda.is_available():
                 inputs = inputs.cuda()
                 labels = labels.cuda()
@@ -265,6 +265,9 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch):
             optimizer.zero_grad()
 
             outputs = mtbdnn.forward(inputs)
+            if torch.cuda.is_available():
+                outputs = outputs.cuda()
+
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
