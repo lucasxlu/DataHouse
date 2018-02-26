@@ -27,7 +27,7 @@ BATCH_SIZE = 16
 
 
 class MTBDNN(nn.Module):
-    def __init__(self, K=1):
+    def __init__(self, K=2):
         super(MTBDNN, self).__init__()
         self.K = K
         self.layers = nn.Sequential(OrderedDict([
@@ -68,10 +68,10 @@ class MTBDNN(nn.Module):
 
         out = torch.DoubleTensor(torch.from_numpy(out))
         if torch.cuda.is_available():
-            out.cuda()
+            out = out.cuda()
         out = Variable(out)
 
-        return out / 2
+        return out / self.K
 
 
 class MLP(nn.Module):
@@ -265,9 +265,6 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch):
             optimizer.zero_grad()
 
             outputs = mtbdnn.forward(inputs)
-            if torch.cuda.is_available():
-                outputs = outputs.cuda()
-
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
