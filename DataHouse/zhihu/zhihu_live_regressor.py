@@ -54,13 +54,17 @@ class MTBDNN(nn.Module):
         out = np.zeros([BATCH_SIZE, 1], dtype=np.double)
 
         for idx, module in self.layers.named_children():
+            # print('-' * 100)
+            # print(module)
+            # print('-' * 100)
             x = F.relu(module(x))
-            temp = x
+
+        temp = x
 
         for idx, module in self.branches.named_children():
-            print('+' * 100)
-            print(module)
-            print('+' * 100)
+            # print('+' * 100)
+            # print(module)
+            # print('+' * 100)
             x = F.relu(module[0](temp))
             x = module[1](x)
 
@@ -244,9 +248,9 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch):
 
     mtbdnn = MTBDNN()
     # mlp = MLP()
-    print(mtbdnn)
+    # print(mtbdnn)
     criterion = nn.MSELoss()
-    optimizer = optim.Adam(mtbdnn.parameters(), weight_decay=1e-4)
+    optimizer = optim.Adam(mtbdnn.parameters(), weight_decay=1e-4, lr=0.1)
     # optimizer = optim.SGD(mlp.parameters(), lr=0.001, momentum=0.9)
     # learning_rate_scheduler = lr_scheduler.ExponentialLR(optimizer, gamma=0.5)
 
@@ -267,11 +271,13 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch):
 
             outputs = mtbdnn.forward(inputs)
             loss = criterion(outputs, labels)
+            loss.requires_grad = True  # explicitly declare require gradient
+
             loss.backward()
             optimizer.step()
 
             running_loss += loss.data[0]
-            if i % 100 == 99:
+            if i % 10 == 0:
                 print('[%d, %5d] loss: %.3f' %
                       (epoch + 1, i + 1, running_loss / 100))
                 running_loss = 0.0
@@ -354,7 +360,7 @@ def predict_score(zhihu_live_id):
 
 if __name__ == '__main__':
     train_set, test_set, train_label, test_label = split_train_test("./ZhihuLiveDB.xlsx", 0.2)
-    train_and_test_model(train_set, test_set, train_label, test_label)
-    # mtb_dnns(train_set, test_set, train_label, test_label, 100)
+    # train_and_test_model(train_set, test_set, train_label, test_label)
+    mtb_dnns(train_set, test_set, train_label, test_label, 100)
 
     # predict_score('788099469471121408')
