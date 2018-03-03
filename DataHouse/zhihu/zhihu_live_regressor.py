@@ -172,14 +172,15 @@ def train_and_test_model(train, test, train_Y, test_Y):
     # model = Pipeline([('poly', PolynomialFeatures(degree=3)),
     #                   ('linear', LinearRegression(fit_intercept=False))])
 
+    model = LassoCV(alphas=[_ * 0.1 for _ in range(1, 1000, 1)])
     # model = RidgeCV(alphas=[_ * 0.1 for _ in range(1, 1000, 1)])
     # model = SVR(kernel='rbf', C=1e3, gamma=0.1)
     # model = SVR(kernel='linear', C=1e3)
     # model = SVR(kernel='poly', C=1e3, degree=2)
     # model = KNeighborsRegressor(n_neighbors=10, n_jobs=4)
 
-    model = MLPRegressor(hidden_layer_sizes=(16, 8, 8), early_stopping=True, alpha=1e-4,
-                         batch_size=16, learning_rate='adaptive')
+    # model = MLPRegressor(hidden_layer_sizes=(16, 8, 8), early_stopping=True, alpha=1e-4,
+    #                      batch_size=16, learning_rate='adaptive')
     model.fit(train, train_Y)
     predicted_score = model.predict(test)
     mae_lr = round(mean_absolute_error(test_Y, predicted_score), 4)
@@ -353,7 +354,7 @@ def predict_score(zhihu_live_id):
 
 if __name__ == '__main__':
     train_set, test_set, train_label, test_label = split_train_test("./ZhihuLiveDB.xlsx", 0.2)
-    # train_and_test_model(train_set, test_set, train_label, test_label)
-    mtb_dnns(train_set, test_set, train_label, test_label, 100)
+    train_and_test_model(train_set, test_set, train_label, test_label)
+    # mtb_dnns(train_set, test_set, train_label, test_label, 100)
 
     # predict_score('788099469471121408')
