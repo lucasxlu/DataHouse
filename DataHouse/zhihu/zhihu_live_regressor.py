@@ -51,7 +51,7 @@ class MTBDNN(nn.Module):
                                         ('out1', nn.Linear(3, 1))]))])
 
     def forward(self, x):
-        out = np.zeros([BATCH_SIZE, 1], dtype=np.double)
+        out = np.zeros([BATCH_SIZE, 1], dtype=np.float32)
 
         for idx, module in self.layers.named_children():
             # print('-' * 100)
@@ -68,9 +68,12 @@ class MTBDNN(nn.Module):
             x = F.relu(module[0](temp))
             x = module[1](x)
 
+            print('~' * 100)
+            print(x.data.cpu().numpy().shape)
+            print('~' * 100)
             out += x.data.cpu().numpy()
 
-        out = torch.DoubleTensor(torch.from_numpy(out))
+        out = torch.FloatTensor(torch.from_numpy(out))
         if torch.cuda.is_available():
             out = out.cuda()
         out = Variable(out)
@@ -247,10 +250,11 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch):
                                              shuffle=False, num_workers=4)
 
     mtbdnn = MTBDNN()
-    # mlp = MLP()
     # print(mtbdnn)
+    # mlp = MLP()
     criterion = nn.MSELoss()
-    optimizer = optim.Adam(mtbdnn.parameters(), weight_decay=1e-4, lr=0.1)
+    # optimizer = optim.Adam(mtbdnn.parameters(), weight_decay=1e-4, lr=0.1)
+    optimizer = optim.SGD(mtbdnn.parameters(), lr=0.1, momentum=0.9)
     # optimizer = optim.SGD(mlp.parameters(), lr=0.001, momentum=0.9)
     # learning_rate_scheduler = lr_scheduler.ExponentialLR(optimizer, gamma=0.5)
 
@@ -261,14 +265,19 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch):
             # learning_rate_scheduler.step()
             inputs, labels = data_batch['data'], data_batch['label']
 
-            inputs, labels = Variable(inputs), Variable(torch.from_numpy(labels.numpy().astype(float)))
+            # inputs, labels = Variable(inputs), Variable(torch.from_numpy(labels.numpy().astype(float)))
+            # inputs, labels = Variable(inputs).float(), Variable(torch.from_numpy(labels.numpy().astype(float)))
+            # inputs, labels = Variable(inputs).float(), Variable(labels).float()
+            inputs, labels = Variable(inputs).float(), Variable(labels).float()
             if torch.cuda.is_available():
                 inputs = inputs.cuda()
                 labels = labels.cuda()
                 mtbdnn = mtbdnn.cuda()
+                # mlp = mlp.cuda()
 
             optimizer.zero_grad()
 
+            # outputs = mlp.forward(inputs)
             outputs = mtbdnn.forward(inputs)
             loss = criterion(outputs, labels)
             loss.requires_grad = True  # explicitly declare require gradient
@@ -297,7 +306,9 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch):
         if torch.cuda.is_available():
             inputs = inputs.cuda()
             mtbdnn = mtbdnn.cuda()
+            # mlp = mlp.cuda()
 
+        # outputs = mlp.forward(Variable(inputs))
         outputs = mtbdnn.forward(Variable(inputs))
         predicted_labels += outputs.cpu().data.numpy().tolist()
         gt_labels += labels.numpy().tolist()
