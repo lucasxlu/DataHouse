@@ -37,6 +37,8 @@ class MTBDNN(nn.Module):
                                   nn.ReLU())),
             ('fc3', nn.Sequential(nn.Linear(8, 8),
                                   nn.ReLU()))]))
+        self.bn1 = nn.BatchNorm1d(16)
+        self.bn2 = nn.BatchNorm1d(16)
 
         # self.branches = nn.ModuleList(
         #     [nn.Sequential(OrderedDict([('br%d' % (_), nn.Linear(8, 4)),
@@ -54,10 +56,15 @@ class MTBDNN(nn.Module):
         out = np.zeros([BATCH_SIZE, 1], dtype=np.float32)
 
         for idx, module in self.layers.named_children():
-            # print('-' * 100)
-            # print(module)
-            # print('-' * 100)
+            #     print('-' * 100)
+            #     print(module)
+            #     print('-' * 100)
             x = F.relu(module(x))
+
+        # modules = [_ for _ in self.layers.named_children()]
+        # x = self.bn1(F.relu(modules[0](x)))
+        # x = self.bn2(F.relu(modules[1](x)))
+        # x = F.relu(modules[2](x))
 
         temp = x
 
@@ -68,9 +75,9 @@ class MTBDNN(nn.Module):
             x = F.relu(module[0](temp))
             x = module[1](x)
 
-            print('~' * 100)
-            print(x.data.cpu().numpy().shape)
-            print('~' * 100)
+            # print('~' * 100)
+            # print(x.data.cpu().numpy().shape)
+            # print('~' * 100)
             out += x.data.cpu().numpy()
 
         out = torch.FloatTensor(torch.from_numpy(out))
@@ -217,7 +224,7 @@ def feature_selection(X, y, k=15):
 
 def mtb_dnns(train, test, train_Y, test_Y, epoch):
     """
-    play with MTB-DNNs
+    train and test with MTB-DNN
     :param train:
     :param test:
     :param train_Y:
@@ -245,25 +252,27 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch):
             return sample
 
     trainloader = torch.utils.data.DataLoader(ZhihuLiveDataset(train, train_Y), batch_size=BATCH_SIZE,
-                                              shuffle=True, num_workers=4)
+                                              shuffle=True, num_workers=4, drop_last=True)
     testloader = torch.utils.data.DataLoader(ZhihuLiveDataset(test, test_Y), batch_size=BATCH_SIZE,
-                                             shuffle=False, num_workers=4)
+                                             shuffle=False, num_workers=4, drop_last=True)
 
     mtbdnn = MTBDNN()
     # print(mtbdnn)
     # mlp = MLP()
     criterion = nn.MSELoss()
-    # optimizer = optim.Adam(mtbdnn.parameters(), weight_decay=1e-4, lr=0.1)
-    optimizer = optim.SGD(mtbdnn.parameters(), lr=0.1, momentum=0.9)
+    # optimizer = optim.Adam(mtbdnn.parameters(), weight_decay=1e-4, lr=0.01)
+    optimizer = optim.SGD(mtbdnn.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-2)
     # optimizer = optim.SGD(mlp.parameters(), lr=0.001, momentum=0.9)
     # learning_rate_scheduler = lr_scheduler.ExponentialLR(optimizer, gamma=0.5)
 
     for epoch in range(epoch):  # loop over the dataset multiple times
 
         running_loss = 0.0
+        # for i, data_batch in enumerate(trainloader):
         for i, data_batch in enumerate(trainloader):
             # learning_rate_scheduler.step()
             inputs, labels = data_batch['data'], data_batch['label']
+            # print(inputs.cpu().numpy().shape)
 
             # inputs, labels = Variable(inputs), Variable(torch.from_numpy(labels.numpy().astype(float)))
             # inputs, labels = Variable(inputs).float(), Variable(torch.from_numpy(labels.numpy().astype(float)))
