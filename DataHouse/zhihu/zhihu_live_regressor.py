@@ -37,34 +37,22 @@ class MTBDNN(nn.Module):
                                   nn.ReLU())),
             ('fc3', nn.Sequential(nn.Linear(8, 8),
                                   nn.ReLU()))]))
-        self.bn1 = nn.BatchNorm1d(16)
-        self.bn2 = nn.BatchNorm1d(16)
-
-        # self.branches = nn.ModuleList(
-        #     [nn.Sequential(OrderedDict([('br%d' % (_), nn.Linear(8, 4)),
-        #                                 ('out%d' % (_), nn.Linear(4, 1))]
-        #                                )) for _ in range(K)])
 
         self.branches = nn.ModuleList(
-            [nn.Sequential(OrderedDict([('br0', nn.Linear(8, 4)),
+            [nn.Sequential(OrderedDict([('br0', nn.Sequential(nn.Linear(8, 4), nn.ReLU())),
                                         ('out0', nn.Linear(4, 1))]
                                        )),
-             nn.Sequential(OrderedDict([('br1', nn.Linear(8, 3)),
+             nn.Sequential(OrderedDict([('br1', nn.Sequential(nn.Linear(8, 3), nn.ReLU())),
                                         ('out1', nn.Linear(3, 1))]))])
 
     def forward(self, x):
-        out = np.zeros([BATCH_SIZE, 1], dtype=np.float32)
+        out = torch.zeros([BATCH_SIZE, 1])
+
+        if torch.cuda.is_available():
+            out = out.cuda()
 
         for idx, module in self.layers.named_children():
-            #     print('-' * 100)
-            #     print(module)
-            #     print('-' * 100)
             x = F.relu(module(x))
-
-        # modules = [_ for _ in self.layers.named_children()]
-        # x = self.bn1(F.relu(modules[0](x)))
-        # x = self.bn2(F.relu(modules[1](x)))
-        # x = F.relu(modules[2](x))
 
         temp = x
 
@@ -72,20 +60,43 @@ class MTBDNN(nn.Module):
             # print('+' * 100)
             # print(module)
             # print('+' * 100)
-            x = F.relu(module[0](temp))
-            x = module[1](x)
+            # x = F.relu(module[0](temp))
+            # x = module[1](x)
 
-            # print('~' * 100)
-            # print(x.data.cpu().numpy().shape)
-            # print('~' * 100)
-            out += x.data.cpu().numpy()
+            if int(idx) == 0:
+                x = module[0](temp)
+                # out += module[1](x).data.cpu().numpy()
+                out += module[1](x).data
+            else:
+                x = module[0](temp)
+                out += module[1](x).data
 
-        out = torch.FloatTensor(torch.from_numpy(out))
-        if torch.cuda.is_available():
-            out = out.cuda()
-        out = Variable(out)
+        out = out / self.K
 
-        return out / self.K
+        return Variable(out)
+
+
+# class MTBDNN(nn.Module):
+#     def __init__(self, K=2):
+#         super(MTBDNN, self).__init__()
+#         self.K = K
+#         self.layers = nn.Sequential(OrderedDict([
+#             ('fc1', nn.Sequential(nn.Linear(23, 16),
+#                                   nn.ReLU())),
+#             ('fc2', nn.Sequential(nn.Linear(16, 8),
+#                                   nn.ReLU())),
+#             ('fc3', nn.Sequential(nn.Linear(8, 8),
+#                                   nn.ReLU())),
+#             ('fc4', nn.Sequential(nn.Linear(8, 1)))]))
+#
+#     def forward(self, x):
+#         for idx, module in self.layers.named_children():
+#             if idx in ['fc1', 'fc2', 'fc3']:
+#                 x = F.relu(module(x))
+#             else:
+#                 x = module(x)
+#
+#         return x
 
 
 class MLP(nn.Module):
@@ -252,9 +263,9 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch):
             return sample
 
     trainloader = torch.utils.data.DataLoader(ZhihuLiveDataset(train, train_Y), batch_size=BATCH_SIZE,
-                                              shuffle=True, num_workers=4, drop_last=True)
+                                              shuffle=True, num_workers=4)
     testloader = torch.utils.data.DataLoader(ZhihuLiveDataset(test, test_Y), batch_size=BATCH_SIZE,
-                                             shuffle=False, num_workers=4, drop_last=True)
+                                             shuffle=False, num_workers=4)
 
     mtbdnn = MTBDNN()
     # print(mtbdnn)
@@ -268,16 +279,11 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch):
     for epoch in range(epoch):  # loop over the dataset multiple times
 
         running_loss = 0.0
-        # for i, data_batch in enumerate(trainloader):
         for i, data_batch in enumerate(trainloader):
             # learning_rate_scheduler.step()
             inputs, labels = data_batch['data'], data_batch['label']
-            # print(inputs.cpu().numpy().shape)
 
-            # inputs, labels = Variable(inputs), Variable(torch.from_numpy(labels.numpy().astype(float)))
-            # inputs, labels = Variable(inputs).float(), Variable(torch.from_numpy(labels.numpy().astype(float)))
-            # inputs, labels = Variable(inputs).float(), Variable(labels).float()
-            inputs, labels = Variable(inputs).float(), Variable(labels).float()
+            inputs, labels = Variable(inputs, requires_grad=True), Variable(labels)
             if torch.cuda.is_available():
                 inputs = inputs.cuda()
                 labels = labels.cuda()
@@ -289,8 +295,9 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch):
             # outputs = mlp.forward(inputs)
             outputs = mtbdnn.forward(inputs)
             loss = criterion(outputs, labels)
-            loss.requires_grad = True  # explicitly declare require gradient
+            # loss.requires_grad = True  # explicitly declare require gradient
 
+            # [ERROR HERE!!!] WHY CANNOT BE UPDATED???
             loss.backward()
             optimizer.step()
 
