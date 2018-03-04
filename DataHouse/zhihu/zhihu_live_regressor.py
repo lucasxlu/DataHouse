@@ -73,7 +73,7 @@ class MTBDNN(nn.Module):
 
         out = out / self.K
 
-        return Variable(out)
+        return Variable(out, requires_grad=True)
 
 
 # class MTBDNN(nn.Module):
