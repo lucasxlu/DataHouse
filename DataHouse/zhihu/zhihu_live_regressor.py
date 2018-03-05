@@ -57,18 +57,13 @@ class MTBDNN(nn.Module):
         temp = x
 
         for idx, module in self.branches.named_children():
-            # print('+' * 100)
-            # print(module)
-            # print('+' * 100)
-            # x = F.relu(module[0](temp))
-            # x = module[1](x)
 
             if int(idx) == 0:
-                x = module[0](temp)
+                x = F.relu(module[0](temp))
                 # out += module[1](x).data.cpu().numpy()
                 out += module[1](x).data
             else:
-                x = module[0](temp)
+                x = F.relu(module[0](temp))
                 out += module[1](x).data
 
         out = out / self.K
@@ -263,9 +258,9 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch):
             return sample
 
     trainloader = torch.utils.data.DataLoader(ZhihuLiveDataset(train, train_Y), batch_size=BATCH_SIZE,
-                                              shuffle=True, num_workers=4)
+                                              shuffle=True, num_workers=4, drop_last=True)
     testloader = torch.utils.data.DataLoader(ZhihuLiveDataset(test, test_Y), batch_size=BATCH_SIZE,
-                                             shuffle=False, num_workers=4)
+                                             shuffle=False, num_workers=4, drop_last=True)
 
     mtbdnn = MTBDNN()
     # print(mtbdnn)
