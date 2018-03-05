@@ -26,6 +26,19 @@ from torch.autograd import Variable
 BATCH_SIZE = 16
 
 
+class MTLoss(nn.Module):
+    """
+    Loss function for MTB-DNN
+    """
+
+    def __init__(self, k):
+        super(MTLoss, self).__init__()
+        self.k = k
+
+    def forward(self, sum_loss):
+        return torch.div(sum_loss, self.k)
+
+
 class MTBDNN(nn.Module):
     def __init__(self, K=2):
         super(MTBDNN, self).__init__()
@@ -66,9 +79,10 @@ class MTBDNN(nn.Module):
                 x = F.relu(module[0](temp))
                 out += module[1](x).data
 
-        out = out / self.K
+        # out = out / self.K
 
-        return Variable(out, requires_grad=True)
+        # return Variable(out, requires_grad=True)
+        return MTLoss(2).forward(Variable(out, requires_grad=True))
 
 
 # class MTBDNN(nn.Module):
@@ -192,15 +206,15 @@ def train_and_test_model(train, test, train_Y, test_Y):
     # model = Pipeline([('poly', PolynomialFeatures(degree=3)),
     #                   ('linear', LinearRegression(fit_intercept=False))])
 
-    model = LassoCV(alphas=[_ * 0.1 for _ in range(1, 1000, 1)])
+    # model = LassoCV(alphas=[_ * 0.1 for _ in range(1, 1000, 1)])
     # model = RidgeCV(alphas=[_ * 0.1 for _ in range(1, 1000, 1)])
     # model = SVR(kernel='rbf', C=1e3, gamma=0.1)
     # model = SVR(kernel='linear', C=1e3)
     # model = SVR(kernel='poly', C=1e3, degree=2)
     # model = KNeighborsRegressor(n_neighbors=10, n_jobs=4)
 
-    # model = MLPRegressor(hidden_layer_sizes=(16, 8, 8), early_stopping=True, alpha=1e-4,
-    #                      batch_size=16, learning_rate='adaptive')
+    model = MLPRegressor(hidden_layer_sizes=(16, 8, 8), early_stopping=True, alpha=1e-4,
+                         batch_size=16, learning_rate='adaptive')
     model.fit(train, train_Y)
     predicted_score = model.predict(test)
     mae_lr = round(mean_absolute_error(test_Y, predicted_score), 4)
