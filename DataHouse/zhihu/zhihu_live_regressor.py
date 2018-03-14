@@ -39,24 +39,42 @@ class MTLoss(nn.Module):
         return torch.div(sum_loss, self.k)
 
 
+class Branch(nn.Module):
+    def __init__(self, params=[8, 4, 1]):
+        """Constructs each branch necessary depending on input
+        Args:
+            b2(nn.Module()): An nn.Conv2d() is passed with specific params
+        """
+        super(Branch, self).__init__()
+        self.bf1 = nn.Linear(params[0], params[1])
+        self.bf2 = nn.Linear(params[1], params[2])
+
+    def forward(self, x):
+        return self.bf2(F.tanh(self.bf1(x)))
+
+
 class MTBDNN(nn.Module):
     def __init__(self, K=2):
         super(MTBDNN, self).__init__()
         self.K = K
         self.layers = nn.Sequential(OrderedDict([
             ('fc1', nn.Sequential(nn.Linear(23, 16),
-                                  nn.ReLU())),
+                                  nn.Tanh())),
             ('fc2', nn.Sequential(nn.Linear(16, 8),
-                                  nn.ReLU())),
+                                  nn.Tanh())),
             ('fc3', nn.Sequential(nn.Linear(8, 8),
-                                  nn.ReLU()))]))
+                                  nn.Tanh()))]))
 
-        self.branches = nn.ModuleList(
-            [nn.Sequential(OrderedDict([('br0', nn.Sequential(nn.Linear(8, 4), nn.ReLU())),
-                                        ('out0', nn.Linear(4, 1))]
-                                       )),
-             nn.Sequential(OrderedDict([('br1', nn.Sequential(nn.Linear(8, 3), nn.ReLU())),
-                                        ('out1', nn.Linear(3, 1))]))])
+        # self.branches = nn.ModuleList(
+        #     [nn.Sequential(OrderedDict([('br0', nn.Sequential(nn.Linear(8, 4), nn.ReLU())),
+        #                                 ('out0', nn.Linear(4, 1))]
+        #                                )),
+        #      nn.Sequential(OrderedDict([('br1', nn.Sequential(nn.Linear(8, 3), nn.ReLU())),
+        #                                 ('out1', nn.Linear(3, 1))]))])
+
+        self.branch1 = Branch(params=[8, 4, 1])
+        self.branch2 = Branch(params=[8, 3, 1])
+        self.branch3 = Branch(params=[8, 5, 1])
 
     def forward(self, x):
         out = torch.zeros([BATCH_SIZE, 1])
@@ -65,47 +83,11 @@ class MTBDNN(nn.Module):
             out = out.cuda()
 
         for idx, module in self.layers.named_children():
-            x = F.relu(module(x))
+            x = F.tanh(module(x))
 
         temp = x
 
-        for idx, module in self.branches.named_children():
-
-            if int(idx) == 0:
-                x = F.relu(module[0](temp))
-                # out += module[1](x).data.cpu().numpy()
-                out += module[1](x).data
-            else:
-                x = F.relu(module[0](temp))
-                out += module[1](x).data
-
-        # out = out / self.K
-
-        # return Variable(out, requires_grad=True)
-        return MTLoss(2).forward(Variable(out, requires_grad=True))
-
-
-# class MTBDNN(nn.Module):
-#     def __init__(self, K=2):
-#         super(MTBDNN, self).__init__()
-#         self.K = K
-#         self.layers = nn.Sequential(OrderedDict([
-#             ('fc1', nn.Sequential(nn.Linear(23, 16),
-#                                   nn.ReLU())),
-#             ('fc2', nn.Sequential(nn.Linear(16, 8),
-#                                   nn.ReLU())),
-#             ('fc3', nn.Sequential(nn.Linear(8, 8),
-#                                   nn.ReLU())),
-#             ('fc4', nn.Sequential(nn.Linear(8, 1)))]))
-#
-#     def forward(self, x):
-#         for idx, module in self.layers.named_children():
-#             if idx in ['fc1', 'fc2', 'fc3']:
-#                 x = F.relu(module(x))
-#             else:
-#                 x = module(x)
-#
-#         return x
+        return torch.div(torch.add(torch.add(self.branch1(temp), self.branch2(temp)), self.branch3(temp)), self.K)
 
 
 class MLP(nn.Module):
@@ -220,8 +202,8 @@ def train_and_test_model(train, test, train_Y, test_Y):
     mae_lr = round(mean_absolute_error(test_Y, predicted_score), 4)
     rmse_lr = round(np.math.sqrt(mean_squared_error(test_Y, predicted_score)), 4)
     # pc = round(np.corrcoef(test_Y, predicted_score)[0, 1], 4)
-    print('===============The Mean Absolute Error of Lasso Regression Model is {0}===================='.format(mae_lr))
-    print('===============The Root Mean Square Error of Linear Model is {0}===================='.format(rmse_lr))
+    print('===============The Mean Absolute Error is {0}===================='.format(mae_lr))
+    print('===============The Root Mean Square Error is {0}===================='.format(rmse_lr))
     # print('===============The Pearson Correlation of Model is {0}===================='.format(pc))
 
     from DataHouse.zhihu.zhihu_util import out_result
@@ -242,7 +224,7 @@ def feature_selection(X, y, k=15):
     return X, y
 
 
-def mtb_dnns(train, test, train_Y, test_Y, epoch):
+def mtb_dnns(train, test, train_Y, test_Y, epoch=100):
     """
     train and test with MTB-DNN
     :param train:
@@ -272,16 +254,16 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch):
             return sample
 
     trainloader = torch.utils.data.DataLoader(ZhihuLiveDataset(train, train_Y), batch_size=BATCH_SIZE,
-                                              shuffle=True, num_workers=4, drop_last=True)
+                                              shuffle=True, num_workers=4)
     testloader = torch.utils.data.DataLoader(ZhihuLiveDataset(test, test_Y), batch_size=BATCH_SIZE,
-                                             shuffle=False, num_workers=4, drop_last=True)
+                                             shuffle=False, num_workers=4)
 
-    mtbdnn = MTBDNN()
-    # print(mtbdnn)
+    mtbdnn = MTBDNN(K=3)
+    print(mtbdnn)
     # mlp = MLP()
     criterion = nn.MSELoss()
-    # optimizer = optim.Adam(mtbdnn.parameters(), weight_decay=1e-4, lr=0.01)
-    optimizer = optim.SGD(mtbdnn.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-2)
+    optimizer = optim.Adam(mtbdnn.parameters(), lr=0.001, weight_decay=1e-3)
+    # optimizer = optim.SGD(mtbdnn.parameters(), lr=0.0001, momentum=0.9, weight_decay=1e-4)
     # optimizer = optim.SGD(mlp.parameters(), lr=0.001, momentum=0.9)
     # learning_rate_scheduler = lr_scheduler.ExponentialLR(optimizer, gamma=0.5)
 
@@ -340,8 +322,8 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch):
 
     mae_lr = round(mean_absolute_error(np.array(gt_labels), np.array(predicted_labels)), 4)
     rmse_lr = round(np.math.sqrt(mean_squared_error(np.array(gt_labels), np.array(predicted_labels))), 4)
-    print('===============The Mean Absolute Error of Lasso Regression Model is {0}===================='.format(mae_lr))
-    print('===============The Root Mean Square Error of Linear Model is {0}===================='.format(rmse_lr))
+    print('===============The Mean Absolute Error of MTB-DNN is {0}===================='.format(mae_lr))
+    print('===============The Root Mean Square Error of MTB-DNN is {0}===================='.format(rmse_lr))
 
 
 def predict_score(zhihu_live_id):
@@ -397,6 +379,6 @@ def predict_score(zhihu_live_id):
 if __name__ == '__main__':
     train_set, test_set, train_label, test_label = split_train_test("./ZhihuLiveDB.xlsx", 0.2)
     # train_and_test_model(train_set, test_set, train_label, test_label)
-    mtb_dnns(train_set, test_set, train_label, test_label, 100)
+    mtb_dnns(train_set, test_set, train_label, test_label, 30)
 
     # predict_score('788099469471121408')
