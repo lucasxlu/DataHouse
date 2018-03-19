@@ -59,18 +59,11 @@ class MTBDNN(nn.Module):
         self.K = K
         self.layers = nn.Sequential(OrderedDict([
             ('fc1', nn.Sequential(nn.Linear(23, 16),
-                                  nn.Tanh())),
+                                  nn.ReLU())),
             ('fc2', nn.Sequential(nn.Linear(16, 8),
-                                  nn.Tanh())),
+                                  nn.ReLU())),
             ('fc3', nn.Sequential(nn.Linear(8, 8),
-                                  nn.Tanh()))]))
-
-        # self.branches = nn.ModuleList(
-        #     [nn.Sequential(OrderedDict([('br0', nn.Sequential(nn.Linear(8, 4), nn.ReLU())),
-        #                                 ('out0', nn.Linear(4, 1))]
-        #                                )),
-        #      nn.Sequential(OrderedDict([('br1', nn.Sequential(nn.Linear(8, 3), nn.ReLU())),
-        #                                 ('out1', nn.Linear(3, 1))]))])
+                                  nn.ReLU()))]))
 
         self.branch1 = Branch(params=[8, 4, 1])
         self.branch2 = Branch(params=[8, 3, 1])
@@ -88,6 +81,7 @@ class MTBDNN(nn.Module):
         temp = x
 
         return torch.div(torch.add(torch.add(self.branch1(temp), self.branch2(temp)), self.branch3(temp)), self.K)
+        # return torch.min([self.branch1(temp), self.branch2(temp), self.branch3(temp)])
 
 
 class MLP(nn.Module):
