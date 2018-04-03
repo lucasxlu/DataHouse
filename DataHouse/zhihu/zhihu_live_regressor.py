@@ -282,7 +282,6 @@ def mtb_dnns(train, test, train_Y, test_Y, epoch=100):
             loss = criterion(outputs, labels)
             # loss.requires_grad = True  # explicitly declare require gradient
 
-            # [ERROR HERE!!!] WHY CANNOT BE UPDATED???
             loss.backward()
             optimizer.step()
 

@@ -1,8 +1,8 @@
 # Data Mining Workspace
 
 ## Introduction
-   This repository is designed for data analysis and data visualization in house price, job interviewing and SNS data mining.
-   We collect all the data with [scrapy](https://docs.scrapy.org/en/latest/index.html) and [requests](http://www.python-requests.org/en/master/), data pre-processing and machine learning with [scikit-learn](http://scikit-learn.org/stable/) and [pandas](http://pandas.pydata.org/).
+   This repository is designed for data mining and data visualization in house price, job interviewing and SNS data mining.
+   We collect data with [scrapy](https://docs.scrapy.org/en/latest/index.html) and [requests](http://www.python-requests.org/en/master/), data pre-processing and machine learning with [scikit-learn](http://scikit-learn.org/stable/) and [pandas](http://pandas.pydata.org/).
    Data storing with [MongoDB](https://docs.mongodb.com/).
    
    There are several modules belongs to different application.  
@@ -19,13 +19,14 @@
    * [Rongyp](DataHouse/rongyp)
     
 ## Prerequisite
-   > Python version >= 3.4  
+   > Python version >= 3.5  
    > requests   
    > scrapy  
    > pandas    
    > scikit-learn   
    > pymongo    
-   > TensorFlow >= 1.3
+   > TensorFlow >= 1.6  
+   > PyTorch >= 0.3.1
    
    
 ## Installation
@@ -42,5 +43,5 @@
 
 
 ## Note
-   V 2.0_ALPHA is released.
+   V 2.0 is released.
    More features are being developed and will be released soon~  
