@@ -6,8 +6,11 @@ import random
 import time
 
 import requests
+import pandas as pd
 from bs4 import BeautifulSoup
 from pymongo import MongoClient
+
+from DataHouse.zhihu import zhihu_util
 
 
 def crawl_zhihu_user(user_id='xulu-0620'):
@@ -189,5 +192,89 @@ def query_and_crawl_zhihuer_from_mongo():
             visited_zhihu_user.append(zhihu_user)
 
 
+def crawl_zhihu_followee(follow_base='xulu-0620', followee_num=100):
+    """
+    crawl followee of a zhihu user
+    :param follow_base:
+    :param followee_num:
+    :return:
+    """
+    headers = {
+        'accept': 'application/json, text/plain, */*',
+        'DNT': '1',
+        'Host': 'www.zhihu.com',
+        'Referer': 'https://www.zhihu.com/people/excited-vczh/following',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.119 Safari/537.36',
+        'X-UDID': 'AHCvxRvVYw2PTphuWeHxakvGHH0KDysWXA8='
+    }
+
+    followee_list = []
+
+    cookies = dict(
+        cookies_are='')
+
+    for offset in range(0, followee_num, 20):
+        payload = {
+            'include': 'data[*].answer_count, articles_count, gender, follower_count, is_followed, is_following,badge[?(type=best_answerer)].topics',
+            'offset': str(offset),
+            'limit': '20'
+        }
+
+        time.sleep(2)
+        print('start crawling page %d' % int(offset / 20))
+        response = requests.get('https://www.zhihu.com/api/v4/members/%s/followees' % str(follow_base), params=payload,
+                                headers=headers, cookies=cookies)
+
+        if response.status_code == 200:
+            result = response.json()
+            if len(result['data']) > 0:
+                for fle in result['data']:
+                    url_token = fle['url_token']
+                    answer_count = fle['answer_count']
+                    articles_count = fle['articles_count']
+                    avatar_url = fle['avatar_url'].replace('_is.jpg', '_r.jpg')
+                    badge = str(fle['badge'])
+                    follower_count = fle['follower_count']
+                    gender = fle['gender']
+                    name = fle['name']
+
+                    followee_list.append(
+                        [url_token, name, gender, answer_count, articles_count, badge, follower_count, avatar_url])
+
+                    col = ['url_token', 'name', 'gender', 'answer_count', 'articles_count', 'badge', 'follower_count',
+                           'avatar_url']
+                    try:
+                        crawl_avatar(url_token, avatar_url)
+                    except:
+                        pass
+
+                    df = pd.DataFrame(followee_list, columns=col)
+                    zhihu_util.mkdirs_if_not_exist('./result/')
+                    df.to_excel('./result/' + str(follow_base) + ".xlsx", sheet_name=str(follow_base), index=False)
+            else:
+                print('All followees have been crawled~~')
+        else:
+            print('No access!!')
+
+
+def crawl_avatar(zhihu_user_token_name, avatar_url):
+    """
+    crawl zhihu avatar
+    :param zhihu_user_token_name:
+    :param avatar_url:
+    :return:
+    """
+
+    print('start crawling avatar of %s ...' % str(zhihu_user_token_name))
+    response = requests.get(avatar_url)
+    zhihu_util.mkdirs_if_not_exist('./result/avatar/')
+    if response.status_code == 200:
+        with open('./result/avatar/%s.jpg' % str(zhihu_user_token_name), mode='wb') as f:
+            f.write(response.content)
+            f.flush()
+            f.close()
+
+
 if __name__ == '__main__':
-    query_and_crawl_zhihuer_from_mongo()
+    # query_and_crawl_zhihuer_from_mongo()
+    crawl_zhihu_followee()
