@@ -30,10 +30,10 @@
    
    
 ## Installation
-    sudo pip3 install -r requirements.txt  
+   ```sudo pip3 install -r requirements.txt```  
 
 ## Start MongoDB Service
-    sudo service mongod start
+   ```sudo service mongod start```
 
 ## Report
    * [House Price Prediction](https://zhuanlan.zhihu.com/p/26949876); [Presentation](/Presentation/House_ML.pptx).

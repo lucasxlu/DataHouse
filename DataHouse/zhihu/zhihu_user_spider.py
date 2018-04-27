@@ -232,7 +232,7 @@ def crawl_zhihu_followee(follow_base='xulu-0620', followee_num=100):
                     url_token = fle['url_token']
                     answer_count = fle['answer_count']
                     articles_count = fle['articles_count']
-                    avatar_url = fle['avatar_url'].replace('_is.jpg', '_r.jpg')
+                    avatar_url = fle['avatar_url'].replace('_is.jpg', '_xll.jpg')
                     badge = str(fle['badge'])
                     follower_count = fle['follower_count']
                     gender = fle['gender']
