@@ -276,5 +276,5 @@ def crawl_avatar(zhihu_user_token_name, avatar_url):
 
 
 if __name__ == '__main__':
-    # query_and_crawl_zhihuer_from_mongo()
-    crawl_zhihu_followee()
+    query_and_crawl_zhihuer_from_mongo()
+    # crawl_zhihu_followee()
