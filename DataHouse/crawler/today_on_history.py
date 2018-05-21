@@ -30,7 +30,7 @@ def crawl(month, day):
     response = requests.get(url, headers=headers)
     if response.status_code == 200 and flag:
         js = response.json()
-        if str(js) != 0:
+        if str(js) != '0':
             for itm in js:
                 resp = requests.get(itm['url'], headers={
                     'Referer': itm['url'],
