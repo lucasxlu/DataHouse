@@ -1,3 +1,4 @@
+import time
 import requests
 from bs4 import BeautifulSoup
 
@@ -34,6 +35,7 @@ def crawl_comments(type='book', item_id='26708119', pn=2):
 if __name__ == '__main__':
     for i in range(2, 237):
         crawl_comments(pn=i, item_id='10750155')
+        time.sleep(np.random.randint(2, 5))
 
     col = ['ID', 'Comment', 'Rate', 'Date']
     df = pd.DataFrame(commments, columns=col)
