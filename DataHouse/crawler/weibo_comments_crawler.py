@@ -8,7 +8,7 @@ import time
 import requests
 from bs4 import BeautifulSoup
 
-WEIBO_DATA_FILEPATH = '/tmp/wjk/'
+WEIBO_DATA_FILEPATH = '/tmp/WeiboComments/'
 
 
 class WeiboComment:
@@ -27,13 +27,12 @@ class WeiboComment:
         return self.__str__()
 
 
-def get_weibo_comments(weibo_url):
+def get_weibo_comments(weibo_url, max_page=20):
     pagenum = 1
     counter = 1
 
-    while pagenum < 39018:
-        # request_url = 'http://weibo.cn/comment/E3bri9IO7?uid=2609400635&rl=0&page=%s' % str(pagenum)
-        request_url = weibo_url + '?page=%s' % str(pagenum)
+    while pagenum < max_page:
+        request_url = weibo_url.split('?')[0] + '?page=%s' % str(pagenum)
         headers = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
             'Host': 'weibo.cn',
@@ -42,7 +41,7 @@ def get_weibo_comments(weibo_url):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.89 Safari/537.36'
         }
 
-        with open('../config/weibo_cookies.txt', mode='rt', encoding='UTF-8') as f:
+        with open('./weibo_cookies.txt', mode='rt', encoding='UTF-8') as f:
             cookies_string = ''.join(f.readlines()).strip()
         cookies = dict(cookies_are=cookies_string)
         response = requests.get(request_url, headers=headers, cookies=cookies)
@@ -108,4 +107,5 @@ def out_txt(content, dir, filename):
 
 
 if __name__ == '__main__':
-    get_weibo_comments('http://weibo.cn/comment/E3bri9IO7')
+    # get_weibo_comments('http://weibo.cn/comment/E3bri9IO7')
+    get_weibo_comments('https://weibo.cn/comment/GlLF9mnDR?uid=1642634100&rl=0&gid=10001&page=20', max_page=20)

@@ -33,10 +33,10 @@ def crawl_comments(type='book', item_id='26708119', pn=2):
 
 
 if __name__ == '__main__':
-    for i in range(2, 237):
-        crawl_comments(pn=i, item_id='10750155')
+    for i in range(2, 894):
+        crawl_comments(pn=i, item_id='2062200')
         time.sleep(np.random.randint(2, 5))
 
     col = ['ID', 'Comment', 'Rate', 'Date']
     df = pd.DataFrame(commments, columns=col)
-    df.to_excel(excel_writer='./数学之美.xlsx', sheet_name='DoubanBook', index=False)
+    df.to_excel(excel_writer='./悲伤逆流成河.xlsx', sheet_name='DoubanBook', index=False)
