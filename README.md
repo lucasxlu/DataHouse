@@ -1,4 +1,4 @@
-<p align="left"><img src="logo/horizontal.png" alt="DataHouse" height="120px"></p>
+
 
 # Data Mining Workspace
 
