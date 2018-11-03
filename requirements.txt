@@ -1,6 +1,6 @@
 gensim==2.2.0
 pymongo==3.4.0
-requests==2.9.1
+requests>=2.20.0
 chardet==3.0.4
 PyMySQL==0.7.11
 jieba==0.38
