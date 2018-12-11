@@ -1,8 +1,8 @@
 import os
 import requests
 
-URL_TEMPLATE = ""
-SAVE_TO_DIR_ROOT = None
+URL_TEMPLATE = "http://yjsjy.hust.edu.cn/Uploadfiles/StudentPhoto/%s.jpg"
+SAVE_TO_DIR_ROOT = "D:/HUST"
 
 
 def mkdirs_if_not_exist(dir_name):
@@ -30,20 +30,18 @@ def crawl_avatar(avatar_url):
             f.close()
 
         print('{0} has been downloaded...'.format(avatar_filename))
-    else:
-        print('File {0} does not exist...'.format(avatar_url.split('/')[-1]))
 
 
 if __name__ == '__main__':
-    for year in [2016, 2017, 2018]:
+    for year in [2008, 2009, 2010, 2011, 2012]:
         for college in [_ for _ in range(301, 320)]:
             for i in range(200):
                 if i < 10:
-                    idx = str(year) + str(college) + str(11000) + str(i)
+                    idx = str(year) + str(college) + "01000" + str(i)
                 elif 10 <= i < 100:
-                    idx = str(year) + str(college) + str(1100) + str(i)
+                    idx = str(year) + str(college) + "0100" + str(i)
                 else:
-                    idx = str(year) + str(college) + str(110) + str(i)
+                    idx = str(year) + str(college) + "010" + str(i)
 
                 try:
                     crawl_avatar(URL_TEMPLATE % str(idx))
