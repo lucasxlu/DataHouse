@@ -51,8 +51,12 @@ def batch_download(raw_data_dir="/home/xulu/Project/nsfw_data_scrapper/raw_data"
 
             file_index = 0
             for url in urls:
-                download_img(url, os.path.join(os.path.join(raw_data_dir, cat, 'IMAGES', '{0}.jpg'.format(file_index))))
-                file_index += 1
+                try:
+                    download_img(url,
+                                 os.path.join(os.path.join(raw_data_dir, cat, 'IMAGES', '{0}.jpg'.format(file_index))))
+                    file_index += 1
+                except:
+                    pass
 
     print('done!')
 
