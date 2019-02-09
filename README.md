@@ -38,7 +38,7 @@
    ```sudo service mongod start```
 
 ## Report
-   * [House Price Prediction](https://zhuanlan.zhihu.com/p/26949876); [Presentation](/Presentation/House_ML.pptx).
+   * [House Price Prediction](https://zhuanlan.zhihu.com/p/26949876).
    * [Zhihu Live Analysis](https://zhuanlan.zhihu.com/p/30514792)
    * [City Analysis](https://zhuanlan.zhihu.com/p/28954770)
    * [JonCn](https://www.zhihu.com/question/30080717/answer/234002087)
