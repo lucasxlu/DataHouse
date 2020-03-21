@@ -3,7 +3,7 @@
 # Data Mining Workspace
 
 ## Introduction
-   This repository is designed for data mining and data visualization in house price, job interviewing and SNS data mining.
+   This repository is designed for data scraping, data mining and data visualization in house price, job interviewing and SNS data mining.
    We collect data with [scrapy](https://docs.scrapy.org/en/latest/index.html) and [requests](http://www.python-requests.org/en/master/), data pre-processing and machine learning with [scikit-learn](http://scikit-learn.org/stable/) and [pandas](http://pandas.pydata.org/).
    Data storing with [MongoDB](https://docs.mongodb.com/).
    
@@ -31,20 +31,20 @@
    > TensorFlow >= 1.6  
    > PyTorch >= 0.3.1
    
-   
-## Installation
+- Installation
+
    ```sudo pip3 install -r requirements.txt```  
 
-## Start MongoDB Service
+- Start MongoDB Service
+
    ```sudo service mongod start```
 
 ## Report
    * [House Price Prediction](https://zhuanlan.zhihu.com/p/26949876).
    * [Zhihu Live Analysis](https://zhuanlan.zhihu.com/p/30514792)
    * [City Analysis](https://zhuanlan.zhihu.com/p/28954770)
-   * [JonCn](https://www.zhihu.com/question/30080717/answer/234002087)
+   * [JobCn](https://www.zhihu.com/question/30080717/answer/234002087)
 
 
 ## Note
-   V 2.0 is released.
-   More features are being developed and will be released soon~  
+   - This repository can be only used for research and non-commercial applications.
